@@ -96,24 +96,21 @@ int main()
 	glfwGetFramebufferSize(window, &width, &height);
 	glViewport(0, 0, width, height);
 
-
 	// Compilando e buildando o programa de shader
 	GLuint shaderID = setupShader();
 
 	// Gerando um buffer simples, com a geometria de um triângulo
 	GLuint VAO = setupGeometry();
 
-
 	glUseProgram(shaderID);
 
 	glm::mat4 model = glm::mat4(1); //matriz identidade;
 	GLint modelLoc = glGetUniformLocation(shaderID, "model");
-	//
+
 	model = glm::rotate(model, /*(GLfloat)glfwGetTime()*/glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(model));
 
 	glEnable(GL_DEPTH_TEST);
-
 
 	// Loop da aplicação - "game loop"
 	while (!glfwWindowShouldClose(window))
@@ -134,17 +131,14 @@ int main()
 		if (rotateX)
 		{
 			model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-			
 		}
 		else if (rotateY)
 		{
 			model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f));
-
 		}
 		else if (rotateZ)
 		{
 			model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
-
 		}
 
 		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(model));
@@ -198,9 +192,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		rotateY = false;
 		rotateZ = true;
 	}
-
-
-
 }
 
 //Esta função está basntante hardcoded - objetivo é compilar e "buildar" um programa de
@@ -274,24 +265,25 @@ int setupGeometry()
 		  0.5, -0.5,  0.5, 0.0, 1.0, 1.0,
 		  0.5, -0.5, -0.5, 1.0, 0.0, 1.0,
 
-		 //
+		 // Primeiro triangulo amarelo
 		 -0.5, -0.5, -0.5, 1.0, 1.0, 0.0,
 		  0.0,  0.5,  0.0, 1.0, 1.0, 0.0,
 		  0.5, -0.5, -0.5, 1.0, 1.0, 0.0,
 
+		  // Triangulo rosa
 		  -0.5, -0.5, -0.5, 1.0, 0.0, 1.0,
 		  0.0,  0.5,  0.0, 1.0, 0.0, 1.0,
 		  -0.5, -0.5, 0.5, 1.0, 0.0, 1.0,
 
+		  // Segundo triangulo amarelo
 		   -0.5, -0.5, 0.5, 1.0, 1.0, 0.0,
 		  0.0,  0.5,  0.0, 1.0, 1.0, 0.0,
 		  0.5, -0.5, 0.5, 1.0, 1.0, 0.0,
 
+		  // Triangulo azul
 		   0.5, -0.5, 0.5, 0.0, 1.0, 1.0,
 		  0.0,  0.5,  0.0, 0.0, 1.0, 1.0,
 		  0.5, -0.5, -0.5, 0.0, 1.0, 1.0,
-
-
 	};
 
 	GLuint VBO, VAO;
@@ -327,8 +319,6 @@ int setupGeometry()
 	//Atributo cor (r, g, b)
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
-
-
 
 	// Observe que isso é permitido, a chamada para glVertexAttribPointer registrou o VBO como o objeto de buffer de vértice 
 	// atualmente vinculado - para que depois possamos desvincular com segurança
