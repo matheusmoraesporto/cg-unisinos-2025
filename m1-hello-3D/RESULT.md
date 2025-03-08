@@ -18,6 +18,4 @@ Acessar o repositório de exemplos da disciplina (https://github.com/fellowsheep
     - 4.2. Altere, no código, o título da janela para Ola 3D – SeuNome. Não precisa fazer outras alterações de código nesta atividade, mas se desejar, já pode fazer alterações e refatorações que achar pertinentes.
 
 **Print comprovando o funcionamento da implementação:**
-<video width="1728" height="1117" controls>
-  <source src="./m1-rec.mov" type="video/mp4">
-</video>
+![Execução do código](./print.png)
