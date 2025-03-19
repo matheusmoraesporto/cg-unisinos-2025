@@ -1,2 +1,5 @@
 app
 app.dSYM
+
+# Mac OS X Finder
+.DS_Store

@@ -57,7 +57,11 @@
  "color = finalColor;\n"
  "}\n\0";
  
- bool rotateX=false, rotateY=false, rotateZ=false;
+ float scale = 1.0f;
+ bool needScale = false;
+ bool incrementScale = false;
+ bool decrementScale = false;
+ bool rotateW=false, rotateS=false, rotateA=false, rotateD=false, rotateI=false, rotateJ=false;;
  
  // Função MAIN
  int main()
@@ -115,47 +119,67 @@
      // Loop da aplicação - "game loop"
      while (!glfwWindowShouldClose(window))
      {
-         // Checa se houveram eventos de input (key pressed, mouse moved etc.) e chama as funções de callback correspondentes
-         glfwPollEvents();
- 
-         // Limpa o buffer de cor
-         glClearColor(1.0f, 1.0f, 1.0f, 1.0f); //cor de fundo
-         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
- 
-         glLineWidth(10);
-         glPointSize(20);
- 
-         float angle = (GLfloat)glfwGetTime();
- 
-         model = glm::mat4(1); 
-         if (rotateX)
-         {
-             model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
-         }
-         else if (rotateY)
-         {
-             model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f));
-         }
-         else if (rotateZ)
-         {
-             model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
-         }
- 
-         glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(model));
-         // Chamada de desenho - drawcall
-         // Poligono Preenchido - GL_TRIANGLES
-         
-         glBindVertexArray(VAO);
-         glDrawArrays(GL_TRIANGLES, 0, 36);
- 
-         // Chamada de desenho - drawcall
-         // CONTORNO - GL_LINE_LOOP
-         
-         glDrawArrays(GL_POINTS, 0, 36);
-         glBindVertexArray(0);
- 
-         // Troca os buffers da tela
-         glfwSwapBuffers(window);
+        // Checa se houveram eventos de input (key pressed, mouse moved etc.) e chama as funções de callback correspondentes
+        glfwPollEvents();
+
+        // Limpa o buffer de cor
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f); //cor de fundo
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glLineWidth(10);
+        glPointSize(20);
+
+        if (incrementScale) {
+            model = glm::scale(model, glm::vec3(1.1f, 1.1f, 1.1f));
+            incrementScale = false;
+        }
+
+        if (decrementScale) {
+            model = glm::scale(model, glm::vec3(0.9f, 0.9f, 0.9f));
+            decrementScale = false;
+        }
+
+        float angleX=0.1f, angleY=0.1f, angleZ=0.1f;
+        if (rotateW)
+        {
+            model = glm::rotate(model, angleX, glm::vec3(1.0f, 0.0f, 0.0f));
+        }
+        else if (rotateS) 
+        {
+            model = glm::rotate(model, angleX, glm::vec3(-1.0f, 0.0f, 0.0f));
+        }
+        else if (rotateI)
+        {
+            model = glm::rotate(model, angleY, glm::vec3(0.0f, 1.0f, 0.0f));
+        }
+        else if (rotateJ)
+        {
+            model = glm::rotate(model, angleY, glm::vec3(0.0f, -1.0f, 0.0f));
+        }
+        else if (rotateA)
+        {
+            model = glm::rotate(model, angleZ, glm::vec3(0.0f, 0.0f, 1.0f));
+        }
+        else if (rotateD)
+        {
+            model = glm::rotate(model, angleZ, glm::vec3(0.0f, 0.0f, -1.0f));
+        }
+
+        glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(model));
+        // Chamada de desenho - drawcall
+        // Poligono Preenchido - GL_TRIANGLES
+        
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        // Chamada de desenho - drawcall
+        // CONTORNO - GL_LINE_LOOP
+        
+        glDrawArrays(GL_POINTS, 0, 36);
+        glBindVertexArray(0);
+
+        // Troca os buffers da tela
+        glfwSwapBuffers(window);
      }
      // Pede pra OpenGL desalocar os buffers
      glDeleteVertexArrays(1, &VAO);
@@ -169,29 +193,60 @@
  // ou solta via GLFW
  void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
  {
-     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-         glfwSetWindowShouldClose(window, GL_TRUE);
- 
-     if (key == GLFW_KEY_X && action == GLFW_PRESS)
-     {
-         rotateX = true;
-         rotateY = false;
-         rotateZ = false;
-     }
- 
-     if (key == GLFW_KEY_Y && action == GLFW_PRESS)
-     {
-         rotateX = false;
-         rotateY = true;
-         rotateZ = false;
-     }
- 
-     if (key == GLFW_KEY_Z && action == GLFW_PRESS)
-     {
-         rotateX = false;
-         rotateY = false;
-         rotateZ = true;
-     }
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GL_TRUE);
+
+    if (key == GLFW_KEY_W) {
+        if (action == GLFW_PRESS)
+            rotateW = true;
+        else if (action == GLFW_RELEASE)
+            rotateW = false;
+    }
+
+    if (key == GLFW_KEY_S) {
+        if (action == GLFW_PRESS)
+            rotateS = true;
+        else if (action == GLFW_RELEASE)
+            rotateS = false;
+    }
+
+    if (key == GLFW_KEY_A) {
+        if (action == GLFW_PRESS)
+            rotateA = true;
+        else if (action == GLFW_RELEASE)
+            rotateA = false;
+    }
+
+    if (key == GLFW_KEY_D) {
+        if (action == GLFW_PRESS)
+            rotateD = true;
+        else if (action == GLFW_RELEASE)
+            rotateD = false;
+    }
+
+    if (key == GLFW_KEY_I) {
+        if (action == GLFW_PRESS)
+            rotateI = true;
+        else if (action == GLFW_RELEASE)
+            rotateI = false;
+    }
+
+    if (key == GLFW_KEY_J) {
+        if (action == GLFW_PRESS)
+            rotateJ = true;
+        else if (action == GLFW_RELEASE)
+            rotateJ = false;
+    }
+
+    if (key == GLFW_KEY_LEFT_BRACKET && action == GLFW_PRESS) {
+        needScale = true;
+        decrementScale = true;
+    }
+
+    if (key == GLFW_KEY_RIGHT_BRACKET && action == GLFW_PRESS) {
+        needScale = true;
+        incrementScale = true;
+    }
  }
  
  //Esta função está basntante hardcoded - objetivo é compilar e "buildar" um programa de
