@@ -8,4 +8,6 @@ Agora vocês terão a primeira tarefa que envolve implementação. Vocês são l
 - [x] No projeto de base, ao pressionar as teclas x, y e z, a pirâmide rotaciona nos respectivos eixos. Adicione controle via teclado para:
     - [x] Mover (transladar) o cubo nos 3 eixos (sugestão de teclas WASD para os eixos x e z, IJ para o eixo y)
     - [x] Promover a escala uniforme do cubo (sugestão de teclas [ para diminuir e ] para aumentar) [Vídeo com as alterações dessa etapa](https://github.com/matheusmoraesporto/cg-unisinos-2025/blob/main/m2-cube-3D/m2-translating-scaling.mov)
-- [ ] Instanciar mais de um cubo na cena
+- [x] Instanciar mais de um cubo na cena [Vídeo com as alterações dessa etapa](https://github.com/matheusmoraesporto/cg-unisinos-2025/blob/main/m2-cube-3D/m2-double-cube.mov)
+  
+**OBS: Como precisei criar um novo arquivo para organizar melhor o funcionamento para duas figuras, então ao rodar o `double-cube3d.cpp` ou o `cube3d.cpp`, é necessário comentar o outro arquivo para gerar o `app`.**
