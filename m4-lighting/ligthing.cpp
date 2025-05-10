@@ -46,14 +46,14 @@
   
  // Dimensões da janela (pode ser alterado em tempo de execução)
  const GLuint WIDTH = 800, HEIGHT = 800;
- float objScale = 1.0f;
- bool needScale = false;
  bool incrementScale = false;
  bool decrementScale = false;
  bool rotateW=false, rotateS=false, rotateA=false, rotateD=false, rotateI=false, rotateJ=false;
+ string vertexShaderPath = "/Users/i559431/unisinos/cg-unisinos-2025/m4-lighting/shaders/vertex-shader.vs";
+ string fragmentShaderPath = "/Users/i559431/unisinos/cg-unisinos-2025/m4-lighting/shaders/fragment-shader.fs";
  string objPath = "/Users/i559431/unisinos/cg-unisinos-2025/m4-lighting/objects/sphere.obj";
  string mtlPath = "/Users/i559431/unisinos/cg-unisinos-2025/m4-lighting/objects/";
- string texturePath = "/Users/i559431/unisinos/cg-unisinos-2025/m4-lighting/objects/";
+ string texturePath = "/Users/i559431/unisinos/cg-unisinos-2025/m4-lighting/objects/minecraft.jpg";
  string mtlFile = "";
  string textureFile = "";
  vector<GLfloat> positions;
@@ -95,12 +95,6 @@
          std::cout << "Failed to initialize GLAD" << std::endl;
      }
  
-     // Obtendo as informações de versão
-     const GLubyte *renderer = glGetString(GL_RENDERER); /* get renderer string */
-     const GLubyte *version = glGetString(GL_VERSION);	/* version as a string */
-     cout << "Renderer: " << renderer << endl;
-     cout << "OpenGL version supported " << version << endl;
- 
      // Definindo as dimensões da viewport com as mesmas dimensões da janela da aplicação
      int width, height;
      glfwGetFramebufferSize(window, &width, &height);
@@ -117,7 +111,7 @@
  
      // Carregando uma textura e armazenando seu id
      int imgWidth, imgHeight;
-     GLuint texID = loadTexture("/Users/i559431/unisinos/cg-unisinos-2025/m4-lighting/objects/minecraft.jpg", imgWidth, imgHeight);
+     GLuint texID = loadTexture(texturePath, imgWidth, imgHeight);
  
     //  float ka = 0.1, kd =0.5, ks = 0.5, q = 10.0;
      vec3 lightPos = vec3(0.6, 1.2, -0.5);
@@ -151,9 +145,10 @@
     
      vec3 pos = vec3(0.0, 0.0, 0.0);
      vec3 dimensions = vec3(1, 1, 1);
-     vec3 color;
      vec3 axis = vec3(1.0f, 1.0f, 1.0f); // Eixo inicial (Y)
      float angle = 0.0f; // Ângulo inicial
+
+     glEnable(GL_DEPTH_TEST);
 
      // Loop da aplicação - "game loop"
      while (!glfwWindowShouldClose(window))
@@ -163,7 +158,7 @@
  
          // Limpa o buffer de cor
          glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // cor de fundo
-         glClear(GL_COLOR_BUFFER_BIT);
+         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
          if (incrementScale) {
             incrementScale = false;
@@ -175,35 +170,47 @@
             dimensions = dimensions * 0.9f;
          }
 
-         if (rotateW) // Rotação para cima
+         // Atualiza rotação acumulativa
+         if (rotateW) // Rotação para cima (em torno de X)
          {
-             angle += 1.0f; // Incrementa o ângulo
-             axis = normalize(axis + vec3(1.0f, 0.0f, 0.0f)); // Ajusta o eixo acumulado
-             cout << "axis: " << axis.x << ", " << axis.y << ", " << axis.z << endl;
-             cout << "angle: " << angle << endl;
+             model = rotate(model, radians(1.0f), vec3(1.0f, 0.0f, 0.0f));
          }
-         else if (rotateS) // Rotação para baixo
+         else if (rotateS) // Rotação para baixo (em torno de X)
          {
-             angle -= 1.0f; // Decrementa o ângulo
-             axis = normalize(axis + vec3(0.9f, 0.0f, 0.0f)); // Ajusta o eixo acumulado
+             model = rotate(model, radians(-1.0f), vec3(1.0f, 0.0f, 0.0f));
          }
-         else if (rotateA) // Rotação para a esquerda
+         else if (rotateA) // Rotação para a esquerda (em torno de Y)
          {
-             angle += 1.0f; // Incrementa o ângulo
-             axis = normalize(axis + vec3(0.0f, 1.0f, 0.0f)); // Ajusta o eixo acumulado
+             model = rotate(model, radians(1.0f), vec3(0.0f, 1.0f, 0.0f));
          }
-         else if (rotateD) // Rotação para a direita
+         else if (rotateD) // Rotação para a direita (em torno de Y)
          {
-             angle -= 1.0f; // Decrementa o ângulo
-             axis = normalize(axis + vec3(0.0f, 0.9f, 0.0f)); // Ajusta o eixo acumulado
+             model = rotate(model, radians(-1.0f), vec3(0.0f, 1.0f, 0.0f));
+         }
+         else if (rotateJ) // Rotação em torno de Z (sentido horário)
+         {
+             model = rotate(model, radians(1.0f), vec3(0.0f, 0.0f, 1.0f));
+         }
+         else if (rotateI) // Rotação em torno de Z (sentido anti-horário)
+         {
+             model = rotate(model, radians(-1.0f), vec3(0.0f, 0.0f, 1.0f));
          }
  
          glBindVertexArray(VAO); // Conectando ao buffer de geometria
          glBindTexture(GL_TEXTURE_2D, texID); //conectando com o buffer de textura que será usado no draw
  
-         // Primeiro Triângulo
-         drawGeometry(shader.ID, VAO, pos, dimensions, angle, nVertices, color, axis);
- 
+         // Translação
+         model = translate(model, pos);
+         // Rotação
+         model = rotate(model, radians(angle), axis);
+         // Escala
+         model = scale(model, dimensions);
+         glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, value_ptr(model));
+     
+         //glUniform4f(glGetUniformLocation(shaderID, "inputColor"), color.r, color.g, color.b, 1.0f); // enviando cor para variável uniform inputColor
+                                                                                                     //  Chamada de desenho - drawcall
+                                                                                                     //  Poligono Preenchido - GL_TRIANGLES
+         glDrawArrays(GL_TRIANGLES, 0, (positions.size() / 3));
      
          glBindVertexArray(0); // Desconectando o buffer de geometria
  
@@ -269,12 +276,10 @@
      }
  
      if (key == GLFW_KEY_LEFT_BRACKET && action == GLFW_PRESS) {
-         needScale = true;
          decrementScale = true;
      }
  
      if (key == GLFW_KEY_RIGHT_BRACKET && action == GLFW_PRESS) {
-         needScale = true;
          incrementScale = true;
      }
  }
@@ -286,59 +291,34 @@
  // A função retorna o identificador do VAO
  int setupGeometry()
  {
-     // Aqui setamos as coordenadas x, y e z do triângulo e as armazenamos de forma
-     // sequencial, já visando mandar para o VBO (Vertex Buffer Objects)
-     // Cada atributo do vértice (coordenada, cores, coordenadas de textura, normal, etc)
-     // Pode ser arazenado em um VBO único ou em VBOs separados
-     GLfloat vertices[] = {
-         // x    y    z   s    t    nx  ny    nz
-         // T0
-         -0.5, -0.5, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0,    // v0
-          0.5, -0.5, 0.0, 1.0, 0.0, 0.0, 0.0, -1.0,   // v1
-          0.0,  0.5, 0.0, 0.5, 1.0, 0.0, 0.0, -1.0 	  // v2
-     };
+    GLuint VAO, VBO[3];
  
-     GLuint VBO, VAO;
-     // Geração do identificador do VBO
-     glGenBuffers(1, &VBO);
-     // Faz a conexão (vincula) do buffer como um buffer de array
-     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-     // Envia os dados do array de floats para o buffer da OpenGl
-     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
- 
-     // Geração do identificador do VAO (Vertex Array Object)
-     glGenVertexArrays(1, &VAO);
-     // Vincula (bind) o VAO primeiro, e em seguida  conecta e seta o(s) buffer(s) de vértices
-     // e os ponteiros para os atributos
-     glBindVertexArray(VAO);
-     // Para cada atributo do vertice, criamos um "AttribPointer" (ponteiro para o atributo), indicando:
-     //  Localização no shader * (a localização dos atributos devem ser correspondentes no layout especificado no vertex shader)
-     //  Numero de valores que o atributo tem (por ex, 3 coordenadas xyz)
-     //  Tipo do dado
-     //  Se está normalizado (entre zero e um)
-     //  Tamanho em bytes
-     //  Deslocamento a partir do byte zero
- 
-     //Atributo posição - coord x, y, z - 3 valores
-     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)0);
-     glEnableVertexAttribArray(0);
- 
-     //Atributo coordenada de textura - coord s, t - 2 valores
-     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(3* sizeof(GLfloat)));
-     glEnableVertexAttribArray(1);
- 
-     //Atributo componentes vetor normal
-     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(5* sizeof(GLfloat)));
-     glEnableVertexAttribArray(2);
- 
-     // Observe que isso é permitido, a chamada para glVertexAttribPointer registrou o VBO como o objeto de buffer de vértice
-     // atualmente vinculado - para que depois possamos desvincular com segurança
-     glBindBuffer(GL_ARRAY_BUFFER, 0);
- 
-     // Desvincula o VAO (é uma boa prática desvincular qualquer buffer ou array para evitar bugs medonhos)
-     glBindVertexArray(0);
- 
-     return VAO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(2, VBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+    glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(GLfloat), positions.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+    glBufferData(GL_ARRAY_BUFFER, textureCoords.size() * sizeof(GLfloat), textureCoords.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(GLfloat), normals.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(2);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    glEnable(GL_DEPTH_TEST);
+
+    return VAO;
  }
  
  GLuint loadTexture(string filePath, int &width, int &height)
@@ -402,7 +382,7 @@
      //glUniform4f(glGetUniformLocation(shaderID, "inputColor"), color.r, color.g, color.b, 1.0f); // enviando cor para variável uniform inputColor
                                                                                                  //  Chamada de desenho - drawcall
                                                                                                  //  Poligono Preenchido - GL_TRIANGLES
-     glDrawArrays(GL_TRIANGLES, 0, nVertices);
+     glDrawArrays(GL_TRIANGLES, 0, (positions.size() / 3));
  }
  
  GLuint generateSphere(float radius, int latSegments, int lonSegments, int &nVertices) {
@@ -462,10 +442,14 @@
      glBindBuffer(GL_ARRAY_BUFFER, VBO);
      glBufferData(GL_ARRAY_BUFFER, vBuffer.size() * sizeof(GLfloat), vBuffer.data(), GL_STATIC_DRAW);
  
+     cout << "positions: " << positions.size() * sizeof(GLfloat) << endl;
+
      // Layout da posição (location 0)
      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (GLvoid*)(0));
      glEnableVertexAttribArray(0);
  
+     cout << "textureCoords: " << textureCoords.size() * sizeof(GLfloat) << endl;
+
      // Layout da cor (location 1)
      glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
      glEnableVertexAttribArray(1);
@@ -473,6 +457,8 @@
      // Layout da normal (location 2)
      glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
      glEnableVertexAttribArray(2);
+
+     cout << "normals: " << normals.size() * sizeof(GLfloat) << endl;
 
      // Layout da UV (location 3)
      glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (GLvoid*)(9 * sizeof(GLfloat)));

@@ -10,7 +10,6 @@
  out vec4 color;
  in vec4 fragPos;
  in vec3 vNormal;
- in vec4 vColor;
  void main()
  {
  
