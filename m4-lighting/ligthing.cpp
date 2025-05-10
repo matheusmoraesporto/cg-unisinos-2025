@@ -162,12 +162,12 @@
 
          if (incrementScale) {
             incrementScale = false;
-            dimensions = dimensions * 1.1f;
+            model = glm::scale(model, glm::vec3(1.1f, 1.1f, 1.1f));
          }
 
          if (decrementScale) {
             decrementScale = false;
-            dimensions = dimensions * 0.9f;
+            model = glm::scale(model, glm::vec3(0.9f, 0.9f, 0.9f));
          }
 
          // Atualiza rotação acumulativa
@@ -202,7 +202,7 @@
          // Translação
          model = translate(model, pos);
          // Rotação
-         model = rotate(model, radians(angle), axis);
+        //  model = rotate(model, radians(angle), axis);
          // Escala
          model = scale(model, dimensions);
          glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, value_ptr(model));
