@@ -142,11 +142,6 @@
      // Matriz de modelo: transformações na geometria (objeto)
      mat4 model = mat4(1); // matriz identidade
      glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, value_ptr(model));
-    
-     vec3 pos = vec3(0.0, 0.0, 0.0);
-     vec3 dimensions = vec3(1, 1, 1);
-     vec3 axis = vec3(1.0f, 1.0f, 1.0f); // Eixo inicial (Y)
-     float angle = 0.0f; // Ângulo inicial
 
      glEnable(GL_DEPTH_TEST);
 
@@ -199,12 +194,6 @@
          glBindVertexArray(VAO); // Conectando ao buffer de geometria
          glBindTexture(GL_TEXTURE_2D, texID); //conectando com o buffer de textura que será usado no draw
  
-         // Translação
-         model = translate(model, pos);
-         // Rotação
-        //  model = rotate(model, radians(angle), axis);
-         // Escala
-         model = scale(model, dimensions);
          glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, value_ptr(model));
      
          //glUniform4f(glGetUniformLocation(shaderID, "inputColor"), color.r, color.g, color.b, 1.0f); // enviando cor para variável uniform inputColor
