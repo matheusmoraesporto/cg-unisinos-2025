@@ -66,7 +66,7 @@ void loadTexture(Obj *obj);
 void setupGeometry(Obj *obj);
 int setupShader();
 void setupObjects(GLuint shaderID);
-void handleSelectedObject(int i);
+void handleSelectedObject();
 void resetScaleVariables();
 
 // Dimensões da janela (pode ser alterado em tempo de execução)
@@ -102,7 +102,7 @@ int main()
 
         for (int i = 0; i < objectsAmount; i++)
         {
-            handleSelectedObject(i);
+            handleSelectedObject();
 
             glUniformMatrix4fv(objects[i].modelLoc, 1, false, glm::value_ptr(objects[i].model));
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -121,45 +121,54 @@ int main()
     return 0;
 }
 
-void handleSelectedObject(int i)
+void handleSelectedObject()
 {
     if (incrementScale)
     {
-        objects[i].model = glm::scale(objects[i].model, glm::vec3(1.1f, 1.1f, 1.1f));
+        objects[selectedObject].model =
+            glm::scale(objects[selectedObject].model, glm::vec3(1.1f, 1.1f, 1.1f));
     }
 
     if (decrementScale)
     {
-        objects[i].model = glm::scale(objects[i].model, glm::vec3(0.9f, 0.9f, 0.9f));
+        objects[selectedObject].model =
+            glm::scale(objects[selectedObject].model, glm::vec3(0.9f, 0.9f, 0.9f));
     }
 
     if (rotateW)
     {
-        objects[i].model = glm::rotate(objects[i].model, 0.1f, glm::vec3(1.0f, 0.0f, 0.0f));
+        objects[selectedObject].model =
+            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(1.0f, 0.0f, 0.0f));
     }
     else if (rotateS)
     {
-        objects[i].model = glm::rotate(objects[i].model, 0.1f, glm::vec3(-1.0f, 0.0f, 0.0f));
+        objects[selectedObject].model =
+            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(-1.0f, 0.0f, 0.0f));
     }
     else if (rotateI)
     {
-        objects[i].model = glm::rotate(objects[i].model, 0.1f, glm::vec3(0.0f, 1.0f, 0.0f));
+        objects[selectedObject].model =
+            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(0.0f, 1.0f, 0.0f));
     }
     else if (rotateJ)
     {
-        objects[i].model = glm::rotate(objects[i].model, 0.1f, glm::vec3(0.0f, -1.0f, 0.0f));
+        objects[selectedObject].model =
+            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(0.0f, -1.0f, 0.0f));
     }
     else if (rotateA)
     {
-        objects[i].model = glm::rotate(objects[i].model, 0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
+        objects[selectedObject].model =
+            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(0.0f, 0.0f, 1.0f));
     }
     else if (rotateD)
     {
-        objects[i].model = glm::rotate(objects[i].model, 0.1f, glm::vec3(0.0f, 0.0f, -1.0f));
+        objects[selectedObject].model =
+            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(0.0f, 0.0f, -1.0f));
     }
 }
 
-void resetScaleVariables() {
+void resetScaleVariables()
+{
     incrementScale = false;
     decrementScale = false;
 }
