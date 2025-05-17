@@ -57,17 +57,17 @@ struct Obj
     glm::mat4 model;
     GLint modelLoc;
 };
-// Protótipo da função de callback de teclado
-void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode);
 
-// Protótipos das funções
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode);
+GLFWwindow *initializeGL();
 Obj loadOBJ(const std::string &filename);
 void loadMTL(Obj *obj, int i);
 void loadTexture(Obj *obj);
 void setupGeometry(Obj *obj);
-
-GLFWwindow *initializeGL();
 int setupShader();
+void setupObjects(GLuint shaderID);
+void handleSelectedObject(int i);
+void resetScaleVariables();
 
 // Dimensões da janela (pode ser alterado em tempo de execução)
 const GLuint WIDTH = 1000, HEIGHT = 1000;
@@ -78,6 +78,7 @@ bool decrementScale = false;
 bool rotateW = false, rotateS = false, rotateA = false, rotateD = false, rotateI = false, rotateJ = false;
 int selectedObject = 0;
 const int objectsAmount = 2;
+Obj objects[objectsAmount];
 string objPath = "/Users/i559431/unisinos/cg-unisinos-2025/m2-vivencial/objects/";
 
 // Função MAIN
@@ -89,38 +90,8 @@ int main()
         "/Users/i559431/unisinos/cg-unisinos-2025/m2-vivencial/shaders/vertex-shader.vs",
         "/Users/i559431/unisinos/cg-unisinos-2025/m2-vivencial/shaders/fragment-shader.fs");
 
-    Obj objects[objectsAmount];
-
-    for (int i = 0; i < objectsAmount; i++)
-    {
-        objects[i] = loadOBJ("/Users/i559431/unisinos/cg-unisinos-2025/m2-vivencial/objects/suzanneTri.obj");
-        loadMTL(&objects[i], i);
-        loadTexture(&objects[i]);
-        setupGeometry(&objects[i]);
-    }
-
     glUseProgram(shader.ID);
-
-    for (int i = 0; i < objectsAmount; i++)
-    {
-        auto model = glm::mat4(1);
-        auto modelLoc = glGetUniformLocation(shader.ID, "model");
-
-        if (i == 0)
-        {
-            model = glm::translate(model, glm::vec3(-0.5f, 0.0f, 0.0f));
-        }
-        else if (i == 1)
-        {
-            model = glm::translate(model, glm::vec3(0.5f, 0.0f, 0.0f));
-        }
-        
-        model = glm::scale(model, glm::vec3(0.3f));
-        glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(model));
-
-        objects[i].model = model;
-        objects[i].modelLoc = modelLoc;
-    }
+    setupObjects(shader.ID);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -131,43 +102,7 @@ int main()
 
         for (int i = 0; i < objectsAmount; i++)
         {
-            if (incrementScale)
-            {
-                objects[i].model = glm::scale(objects[i].model, glm::vec3(1.1f, 1.1f, 1.1f));
-                incrementScale = false;
-            }
-
-            if (decrementScale)
-            {
-                objects[i].model = glm::scale(objects[i].model, glm::vec3(0.9f, 0.9f, 0.9f));
-                decrementScale = false;
-            }
-
-            float angleX = 0.1f, angleY = 0.1f, angleZ = 0.1f;
-            if (rotateW)
-            {
-                objects[i].model = glm::rotate(objects[i].model, angleX, glm::vec3(1.0f, 0.0f, 0.0f));
-            }
-            else if (rotateS)
-            {
-                objects[i].model = glm::rotate(objects[i].model, angleX, glm::vec3(-1.0f, 0.0f, 0.0f));
-            }
-            else if (rotateI)
-            {
-                objects[i].model = glm::rotate(objects[i].model, angleY, glm::vec3(0.0f, 1.0f, 0.0f));
-            }
-            else if (rotateJ)
-            {
-                objects[i].model = glm::rotate(objects[i].model, angleY, glm::vec3(0.0f, -1.0f, 0.0f));
-            }
-            else if (rotateA)
-            {
-                objects[i].model = glm::rotate(objects[i].model, angleZ, glm::vec3(0.0f, 0.0f, 1.0f));
-            }
-            else if (rotateD)
-            {
-                objects[i].model = glm::rotate(objects[i].model, angleZ, glm::vec3(0.0f, 0.0f, -1.0f));
-            }
+            handleSelectedObject(i);
 
             glUniformMatrix4fv(objects[i].modelLoc, 1, false, glm::value_ptr(objects[i].model));
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -177,12 +112,56 @@ int main()
             glDrawArrays(GL_TRIANGLES, 0, objects[i].vertices.size());
         }
 
+        resetScaleVariables();
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
     glDeleteVertexArrays(1, &objects[0].VAO);
     glfwTerminate();
     return 0;
+}
+
+void handleSelectedObject(int i)
+{
+    if (incrementScale)
+    {
+        objects[i].model = glm::scale(objects[i].model, glm::vec3(1.1f, 1.1f, 1.1f));
+    }
+
+    if (decrementScale)
+    {
+        objects[i].model = glm::scale(objects[i].model, glm::vec3(0.9f, 0.9f, 0.9f));
+    }
+
+    if (rotateW)
+    {
+        objects[i].model = glm::rotate(objects[i].model, 0.1f, glm::vec3(1.0f, 0.0f, 0.0f));
+    }
+    else if (rotateS)
+    {
+        objects[i].model = glm::rotate(objects[i].model, 0.1f, glm::vec3(-1.0f, 0.0f, 0.0f));
+    }
+    else if (rotateI)
+    {
+        objects[i].model = glm::rotate(objects[i].model, 0.1f, glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+    else if (rotateJ)
+    {
+        objects[i].model = glm::rotate(objects[i].model, 0.1f, glm::vec3(0.0f, -1.0f, 0.0f));
+    }
+    else if (rotateA)
+    {
+        objects[i].model = glm::rotate(objects[i].model, 0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
+    }
+    else if (rotateD)
+    {
+        objects[i].model = glm::rotate(objects[i].model, 0.1f, glm::vec3(0.0f, 0.0f, -1.0f));
+    }
+}
+
+void resetScaleVariables() {
+    incrementScale = false;
+    decrementScale = false;
 }
 
 // Função de callback de teclado - só pode ter uma instäncia (deve ser estática se
@@ -293,6 +272,35 @@ void setupGeometry(Obj *obj)
     glBindVertexArray(0);
 
     obj->VAO = VAO;
+}
+
+void setupObjects(GLuint shaderID)
+{
+    for (int i = 0; i < objectsAmount; i++)
+    {
+        objects[i] = loadOBJ("/Users/i559431/unisinos/cg-unisinos-2025/m2-vivencial/objects/suzanneTri.obj");
+        loadMTL(&objects[i], i);
+        loadTexture(&objects[i]);
+        setupGeometry(&objects[i]);
+
+        auto model = glm::mat4(1);
+        auto modelLoc = glGetUniformLocation(shaderID, "model");
+
+        if (i == 0)
+        {
+            model = glm::translate(model, glm::vec3(-0.5f, 0.0f, 0.0f));
+        }
+        else if (i == 1)
+        {
+            model = glm::translate(model, glm::vec3(0.5f, 0.0f, 0.0f));
+        }
+
+        model = glm::scale(model, glm::vec3(0.3f));
+        glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(model));
+
+        objects[i].model = model;
+        objects[i].modelLoc = modelLoc;
+    }
 }
 
 GLFWwindow *initializeGL()
