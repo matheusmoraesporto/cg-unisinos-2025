@@ -143,40 +143,40 @@ void handleSelectedObject()
         handleTranslation();
 }
 
-void handleTranslation() {
-    if (actionW)
+void handleTranslation()
+{
+    float xTranslation = objects[selectedObject].model[3][0];
+    float yTranslation = objects[selectedObject].model[3][1];
+
+    bool canTranslateW = yTranslation < 0.7f;
+    bool canTranslateS = yTranslation > -0.7f;
+    bool canTranslateA = xTranslation > -0.6f;
+    bool canTranslateD = xTranslation < 0.6f;
+
+    if (actionW && canTranslateW)
     {
         objects[selectedObject].model =
-            glm::translate(objects[selectedObject].model, glm::vec3(0.0f, 0.05f, 0.0f));
+            glm::translate(objects[selectedObject].model, glm::vec3(0.0f, 0.01f, 0.0f));
     }
-    else if (actionS)
+    else if (actionS && canTranslateS)
     {
         objects[selectedObject].model =
-            glm::translate(objects[selectedObject].model, glm::vec3(0.0f, -0.05f, 0.0f));
+            glm::translate(objects[selectedObject].model, glm::vec3(0.0f, -0.01f, 0.0f));
     }
-    else if (actionI)
+    else if (actionA && canTranslateA)
     {
         objects[selectedObject].model =
-            glm::translate(objects[selectedObject].model, glm::vec3(0.0f, 0.0f, 0.05f));
+            glm::translate(objects[selectedObject].model, glm::vec3(-0.01f, 0.0f, 0.0f));
     }
-    else if (actionJ)
+    else if (actionD && canTranslateD)
     {
         objects[selectedObject].model =
-            glm::translate(objects[selectedObject].model, glm::vec3(0.0f, 0.0f, -0.05f));
-    }
-    else if (actionA)
-    {
-        objects[selectedObject].model =
-            glm::translate(objects[selectedObject].model, glm::vec3(-0.05f, 0.0f, 0.0f));
-    }
-    else if (actionD)
-    {
-        objects[selectedObject].model =
-            glm::translate(objects[selectedObject].model, glm::vec3(0.05f, 0.0f, 0.0f));
+            glm::translate(objects[selectedObject].model, glm::vec3(0.01f, 0.0f, 0.0f));
     }
 }
 
-void handleRotation() {
+void handleRotation()
+{
     if (actionW)
     {
         objects[selectedObject].model =
@@ -235,12 +235,14 @@ void resetScaleVariables()
 // ou solta via GLFW
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode)
 {
-    if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+    if (key == GLFW_KEY_R && action == GLFW_PRESS)
+    {
         isTranslation = false;
         isRotation = true;
     }
 
-    if (key == GLFW_KEY_T && action == GLFW_PRESS) {
+    if (key == GLFW_KEY_T && action == GLFW_PRESS)
+    {
         isRotation = false;
         isTranslation = true;
     }
@@ -404,7 +406,7 @@ GLFWwindow *initializeGL()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Criação da janela GLFW
-    GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "Olá 3D - Matheus Porto!", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "Vivencial M2", nullptr, nullptr);
     if (!window)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
