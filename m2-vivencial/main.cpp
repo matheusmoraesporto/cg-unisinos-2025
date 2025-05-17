@@ -95,6 +95,9 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
 
+    cout << "First character selected" << endl;
+    cout << "Press \"N\" to select next" << endl;
+
     while (!glfwWindowShouldClose(window))
     {
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -239,6 +242,15 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     {
         needScale = true;
         incrementScale = true;
+    }
+
+    if (key == GLFW_KEY_N && action == GLFW_PRESS) {
+        selectedObject = (selectedObject + 1) % 2;
+
+        if (selectedObject == 0)
+            cout << "You selected the first character" << endl;
+        else
+            cout << "You selected the second character" << endl;
     }
 }
 
@@ -430,9 +442,6 @@ Obj loadOBJ(const std::string &filename)
         }
     }
 
-    printf("Parsed OBJ file '%s' with %zu positions, %zu normals, %zu texcoords, %zu triangles and %zu vertices\n",
-           filename.c_str(), obj.positions.size(), obj.normals.size(), obj.texcoords.size(), obj.triangle_indices.size(), obj.vertices.size());
-
     return obj;
 }
 
@@ -500,7 +509,6 @@ void loadMTL(Obj *obj, int i)
         {
             std::string texture;
             iss >> readValue >> texture;
-            cout << "Texture path: " << objPath + texture << endl;
             if (i == 0)
                 obj->texture_path = objPath + "Suzanne.png";
             else
