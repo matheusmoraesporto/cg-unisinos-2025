@@ -67,6 +67,9 @@ void setupGeometry(Obj *obj);
 int setupShader();
 void setupObjects(GLuint shaderID);
 void handleSelectedObject();
+void handleScale();
+void handleRotation();
+void handleTranslation();
 void resetScaleVariables();
 
 // Dimensões da janela (pode ser alterado em tempo de execução)
@@ -75,7 +78,9 @@ float scale = 1.0f;
 bool needScale = false;
 bool incrementScale = false;
 bool decrementScale = false;
-bool rotateW = false, rotateS = false, rotateA = false, rotateD = false, rotateI = false, rotateJ = false;
+bool actionW = false, actionS = false, actionA = false, actionD = false, actionI = false, actionJ = false;
+bool isRotation = false;
+bool isTranslation = false;
 int selectedObject = 0;
 const int objectsAmount = 2;
 Obj objects[objectsAmount];
@@ -96,7 +101,10 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     cout << "First character selected" << endl;
-    cout << "Press \"N\" to select next" << endl;
+    cout << "=== Press \"N\" to select next" << endl;
+    cout << "=== Press \"R\" to rotate the character" << endl;
+    cout << "=== Press \"T\" to translate the character" << endl;
+    cout << "=== You can use the keys \"A\", \"W\", \"S\" and \"D\" to move the character" << endl;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -126,6 +134,83 @@ int main()
 
 void handleSelectedObject()
 {
+    handleScale();
+
+    if (isRotation)
+        handleRotation();
+
+    if (isTranslation)
+        handleTranslation();
+}
+
+void handleTranslation() {
+    if (actionW)
+    {
+        objects[selectedObject].model =
+            glm::translate(objects[selectedObject].model, glm::vec3(0.0f, 0.05f, 0.0f));
+    }
+    else if (actionS)
+    {
+        objects[selectedObject].model =
+            glm::translate(objects[selectedObject].model, glm::vec3(0.0f, -0.05f, 0.0f));
+    }
+    else if (actionI)
+    {
+        objects[selectedObject].model =
+            glm::translate(objects[selectedObject].model, glm::vec3(0.0f, 0.0f, 0.05f));
+    }
+    else if (actionJ)
+    {
+        objects[selectedObject].model =
+            glm::translate(objects[selectedObject].model, glm::vec3(0.0f, 0.0f, -0.05f));
+    }
+    else if (actionA)
+    {
+        objects[selectedObject].model =
+            glm::translate(objects[selectedObject].model, glm::vec3(-0.05f, 0.0f, 0.0f));
+    }
+    else if (actionD)
+    {
+        objects[selectedObject].model =
+            glm::translate(objects[selectedObject].model, glm::vec3(0.05f, 0.0f, 0.0f));
+    }
+}
+
+void handleRotation() {
+    if (actionW)
+    {
+        objects[selectedObject].model =
+            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(1.0f, 0.0f, 0.0f));
+    }
+    else if (actionS)
+    {
+        objects[selectedObject].model =
+            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(-1.0f, 0.0f, 0.0f));
+    }
+    else if (actionI)
+    {
+        objects[selectedObject].model =
+            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+    else if (actionJ)
+    {
+        objects[selectedObject].model =
+            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(0.0f, -1.0f, 0.0f));
+    }
+    else if (actionA)
+    {
+        objects[selectedObject].model =
+            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(0.0f, 0.0f, 1.0f));
+    }
+    else if (actionD)
+    {
+        objects[selectedObject].model =
+            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(0.0f, 0.0f, -1.0f));
+    }
+}
+
+void handleScale()
+{
     if (incrementScale)
     {
         objects[selectedObject].model =
@@ -136,37 +221,6 @@ void handleSelectedObject()
     {
         objects[selectedObject].model =
             glm::scale(objects[selectedObject].model, glm::vec3(0.9f, 0.9f, 0.9f));
-    }
-
-    if (rotateW)
-    {
-        objects[selectedObject].model =
-            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(1.0f, 0.0f, 0.0f));
-    }
-    else if (rotateS)
-    {
-        objects[selectedObject].model =
-            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(-1.0f, 0.0f, 0.0f));
-    }
-    else if (rotateI)
-    {
-        objects[selectedObject].model =
-            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(0.0f, 1.0f, 0.0f));
-    }
-    else if (rotateJ)
-    {
-        objects[selectedObject].model =
-            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(0.0f, -1.0f, 0.0f));
-    }
-    else if (rotateA)
-    {
-        objects[selectedObject].model =
-            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(0.0f, 0.0f, 1.0f));
-    }
-    else if (rotateD)
-    {
-        objects[selectedObject].model =
-            glm::rotate(objects[selectedObject].model, 0.01f, glm::vec3(0.0f, 0.0f, -1.0f));
     }
 }
 
@@ -181,55 +235,65 @@ void resetScaleVariables()
 // ou solta via GLFW
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode)
 {
+    if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+        isTranslation = false;
+        isRotation = true;
+    }
+
+    if (key == GLFW_KEY_T && action == GLFW_PRESS) {
+        isRotation = false;
+        isTranslation = true;
+    }
+
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
 
     if (key == GLFW_KEY_W)
     {
         if (action == GLFW_PRESS)
-            rotateW = true;
+            actionW = true;
         else if (action == GLFW_RELEASE)
-            rotateW = false;
+            actionW = false;
     }
 
     if (key == GLFW_KEY_S)
     {
         if (action == GLFW_PRESS)
-            rotateS = true;
+            actionS = true;
         else if (action == GLFW_RELEASE)
-            rotateS = false;
+            actionS = false;
     }
 
     if (key == GLFW_KEY_A)
     {
         if (action == GLFW_PRESS)
-            rotateA = true;
+            actionA = true;
         else if (action == GLFW_RELEASE)
-            rotateA = false;
+            actionA = false;
     }
 
     if (key == GLFW_KEY_D)
     {
         if (action == GLFW_PRESS)
-            rotateD = true;
+            actionD = true;
         else if (action == GLFW_RELEASE)
-            rotateD = false;
+            actionD = false;
     }
 
     if (key == GLFW_KEY_I)
     {
         if (action == GLFW_PRESS)
-            rotateI = true;
+            actionI = true;
         else if (action == GLFW_RELEASE)
-            rotateI = false;
+            actionI = false;
     }
 
     if (key == GLFW_KEY_J)
     {
         if (action == GLFW_PRESS)
-            rotateJ = true;
+            actionJ = true;
         else if (action == GLFW_RELEASE)
-            rotateJ = false;
+            actionJ = false;
     }
 
     if (key == GLFW_KEY_LEFT_BRACKET && action == GLFW_PRESS)
@@ -244,7 +308,8 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         incrementScale = true;
     }
 
-    if (key == GLFW_KEY_N && action == GLFW_PRESS) {
+    if (key == GLFW_KEY_N && action == GLFW_PRESS)
+    {
         selectedObject = (selectedObject + 1) % 2;
 
         if (selectedObject == 0)

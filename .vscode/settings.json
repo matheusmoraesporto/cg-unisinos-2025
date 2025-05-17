@@ -44,7 +44,17 @@
         "map": "cpp",
         "queue": "cpp",
         "stack": "cpp",
-        "unordered_map": "cpp"
+        "unordered_map": "cpp",
+        "__bit_reference": "cpp",
+        "__node_handle": "cpp",
+        "charconv": "cpp",
+        "complex": "cpp",
+        "cstdarg": "cpp",
+        "ctime": "cpp",
+        "forward_list": "cpp",
+        "iomanip": "cpp",
+        "ratio": "cpp",
+        "sstream": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
