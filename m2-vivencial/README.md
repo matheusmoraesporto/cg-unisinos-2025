@@ -14,11 +14,11 @@
   - Quando o `"R"` é selecionado, não há nenhuma restrição
 - O usuário pode usar as teclas `"["` e `"]"` para aumentar ou diminuir o tamanho do objeto selecionado
 
+### No gif abaixo, podemos ver as seguintes interações:
 
-### Exemplo de interação selecionando o objeto com a tecla "N"
+- Exemplo de interação selecionando o objeto com a tecla "N"
+- Exemplo de interação transladando o objeto selecionado
+- Exemplo de interação rotacionando o objeto selecionado
+- Exemplo de interação alterando a escala do objeto selecionado
 
-### Exemplo de interação transladando o objeto selecionado
-
-### Exemplo de interação rotacionando o objeto selecionado
-
-### Exemplo de interação alterando a escala do objeto selecionado
+![Alt Text](https://github.com/matheusmoraesporto/cg-unisinos-2025/blob/main/m2-vivencial/suzannes.gif)
