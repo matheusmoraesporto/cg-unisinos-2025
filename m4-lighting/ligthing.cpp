@@ -53,7 +53,7 @@
  string fragmentShaderPath = "/Users/i559431/unisinos/cg-unisinos-2025/m4-lighting/shaders/fragment-shader.fs";
  string objPath = "/Users/i559431/unisinos/cg-unisinos-2025/m4-lighting/objects/sphere.obj";
  string mtlPath = "/Users/i559431/unisinos/cg-unisinos-2025/m4-lighting/objects/";
- string texturePath = "/Users/i559431/unisinos/cg-unisinos-2025/m4-lighting/objects/minecraft.jpg";
+ string texturePath = "/Users/i559431/unisinos/cg-unisinos-2025/m4-lighting/objects/pokeball.jpg";
  string mtlFile = "";
  string textureFile = "";
  vector<GLfloat> positions;
