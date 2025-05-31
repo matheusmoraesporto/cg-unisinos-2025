@@ -84,7 +84,7 @@ int main()
 #endif
 
     // Criação da janela GLFW
-    GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "Olá PokeBola iluminada!", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "Olá esfera iluminada!", nullptr, nullptr);
     glfwMakeContextCurrent(window);
 
     // Fazendo o registro da função de callback para a janela GLFW
