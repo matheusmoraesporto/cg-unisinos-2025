@@ -11,25 +11,25 @@ Inicialmente o objeto possui todas as luzes ligadas, podemos ligar e desligar el
 - Ligar/desligar back light utilizar a tecla `3`
 
 ### Exemplo com todas as luzes ligadas
-![alt text](prints/image-0.png)
+<img src="prints/image-0.png" width="300"/>
 
 ### Exemplo com fill light e back light ligadas
-![alt text](prints/image-1.png)
+<img src="prints/image-1.png" width="300"/>
 
 ### Exemplo com key light e back light ligadas
-![alt text](prints/image-2.png)
+<img src="prints/image-2.png" width="300"/>
 
 ### Exemplo com key light e fill light ligadas
-![alt text](prints/image-3.png)
+<img src="prints/image-3.png" width="300"/>
 
 ### Exemplo somente com key light
-![alt text](prints/image-4.png)
+<img src="prints/image-4.png" width="300"/>
 
 ### Exemplo somente com fill light
-![alt text](prints/image-5.png)
+<img src="prints/image-5.png" width="300"/>
 
 ### Exemplo somente com back light
-![alt text](prints/image-6.png)
+<img src="prints/image-6.png" width="300"/>
 
 ### Exemplo com todas as luzes desligadas
-![alt text](prints/image-7.png)
+<img src="prints/image-7.png" width="300"/>
