@@ -26,6 +26,8 @@ using namespace std;
 
 #include "stb_image.h"
 #include "Shader.h"
+#include "Camera.h"
+#include "Mesh.h"
 
 using namespace glm;
 
@@ -33,6 +35,7 @@ using namespace glm;
 
 // Protótipo da função de callback de teclado
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 // Protótipos das funções
 int setupShader();
@@ -62,6 +65,7 @@ vector<GLfloat> normals;
 vector<GLfloat> ka;
 vector<GLfloat> ks;
 float ns;
+Camera camera;
 
 // Função MAIN
 int main()
@@ -88,6 +92,7 @@ int main()
 
     // Fazendo o registro da função de callback para a janela GLFW
     glfwSetKeyCallback(window, key_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
 
     // GLAD: carrega todos os ponteiros d funções da OpenGL
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -113,15 +118,21 @@ int main()
     int imgWidth, imgHeight;
     GLuint texID = loadTexture(texturePath, imgWidth, imgHeight);
 
-    //  float ka = 0.1, kd =0.5, ks = 0.5, q = 10.0;
-    // vec3 lightPos = vec3(0.6, 1.2, -0.5);
     vec3 camPos = vec3(0.0, 0.0, -3.0);
 
     glm::vec3 backLightPos = glm::vec3(-1.0f, 1.0f, -1.0f);
-    glm::vec3 keyLightPos = glm::vec3(-1.0f, -1.0f, 1.0f);
+    glm::vec3 keyLightPos = glm::vec3 (-1.0f, -1.0f, 1.0f);
     glm::vec3 fillLightPos = glm::vec3(1.0f, -1.0f, 1.0f);
 
+    toggleLight(shader.ID, "lightPosKey", keyLightPos);
+    toggleLight(shader.ID, "lightPosFill", fillLightPos);
+    toggleLight(shader.ID, "lightPosBack", backLightPos);
+
     glUseProgram(shader.ID);
+
+    camera.initialize(&shader, width, height);
+    Mesh mineSphere;
+	mineSphere.initialize(VAO, positions.size() / 3, &shader, texID);
 
     // Enviar a informação de qual variável armazenará o buffer da textura
     glUniform1i(glGetUniformLocation(shader.ID, "texBuff"), 0);
@@ -157,72 +168,21 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // cor de fundo
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        auto lightOff = vec3(0.0f, 0.0f, 0.0f);
-
-        if (toggleKeyLight)
-            toggleLight(shader.ID, "lightPosKey", keyLightPos);
-        else
-            toggleLight(shader.ID, "lightPosKey", lightOff);
-
-        if (toggleFillLight)
-            toggleLight(shader.ID, "lightPosFill", fillLightPos);
-        else
-            toggleLight(shader.ID, "lightPosFill", lightOff);
-
-        if (toggleBackLight)
-            toggleLight(shader.ID, "lightPosBack", backLightPos);
-        else
-            toggleLight(shader.ID, "lightPosBack", lightOff);
-
-        if (incrementScale)
-        {
-            incrementScale = false;
-            model = glm::scale(model, glm::vec3(1.1f, 1.1f, 1.1f));
-        }
-
-        if (decrementScale)
-        {
-            decrementScale = false;
-            model = glm::scale(model, glm::vec3(0.9f, 0.9f, 0.9f));
-        }
-
-        // Atualiza rotação acumulativa
-        if (rotateW) // Rotação para cima (em torno de X)
-        {
-            model = rotate(model, radians(1.0f), vec3(1.0f, 0.0f, 0.0f));
-        }
-        else if (rotateS) // Rotação para baixo (em torno de X)
-        {
-            model = rotate(model, radians(-1.0f), vec3(1.0f, 0.0f, 0.0f));
-        }
-        else if (rotateA) // Rotação para a esquerda (em torno de Y)
-        {
-            model = rotate(model, radians(1.0f), vec3(0.0f, 1.0f, 0.0f));
-        }
-        else if (rotateD) // Rotação para a direita (em torno de Y)
-        {
-            model = rotate(model, radians(-1.0f), vec3(0.0f, 1.0f, 0.0f));
-        }
-        else if (rotateJ) // Rotação em torno de Z (sentido horário)
-        {
-            model = rotate(model, radians(1.0f), vec3(0.0f, 0.0f, 1.0f));
-        }
-        else if (rotateI) // Rotação em torno de Z (sentido anti-horário)
-        {
-            model = rotate(model, radians(-1.0f), vec3(0.0f, 0.0f, 1.0f));
-        }
+        camera.update();
+		mineSphere.draw();
+		mineSphere.update();
 
         glBindVertexArray(VAO);              // Conectando ao buffer de geometria
         glBindTexture(GL_TEXTURE_2D, texID); // conectando com o buffer de textura que será usado no draw
 
-        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, value_ptr(model));
+        // glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, value_ptr(model));
 
         // glUniform4f(glGetUniformLocation(shaderID, "inputColor"), color.r, color.g, color.b, 1.0f); // enviando cor para variável uniform inputColor
         //   Chamada de desenho - drawcall
         //   Poligono Preenchido - GL_TRIANGLES
-        glDrawArrays(GL_TRIANGLES, 0, (positions.size() / 3));
+        // glDrawArrays(GL_TRIANGLES, 0, (positions.size() / 3));
 
-        glBindVertexArray(0); // Desconectando o buffer de geometria
+        // glBindVertexArray(0); // Desconectando o buffer de geometria
 
         // Troca os buffers da tela
         glfwSwapBuffers(window);
@@ -246,6 +206,15 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
+
+    camera.move(window, key, action);
+}
+
+void mouse_callback(GLFWwindow* window, double posX, double posY)
+{
+    cout << "Mouse position: " << posX << ", " << posY << endl;
+
+	camera.rotate(window, posX, posY);
 }
 
 GLuint loadTexture(string filePath, int &width, int &height)
