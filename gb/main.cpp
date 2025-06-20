@@ -24,6 +24,7 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "ObjectConfig.h"
+#include "ObjectReader.h"
 
 using namespace std;
 using namespace glm;
@@ -35,15 +36,13 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 
 // Protótipos das funções
 GLFWwindow *initializeGL();
-int setupShader();
-void setupGeometry(Object3D *object);
-GLuint loadTexture(string filePath);
-void loadOBJ(Object3D *object);
-void loadMTL(Object3D *object);
 void setupInitialObjects(vector<Object3D> &objects, Shader &shader);
+void setupGeometry(Object3D *object);
+void handleLighting(GLuint shaderID);
+void transformObject(Object3D &object);
+void drawObject(const Object3D &object, GLuint shaderID);
 
-bool incrementScale = false;
-bool decrementScale = false;
+bool incrementScale = false, decrementScale = false;
 bool rotateW = false, rotateS = false, rotateA = false, rotateD = false, rotateI = false, rotateJ = false;
 Camera camera;
 vector<Object3D> objects;
@@ -51,7 +50,6 @@ vector<Object3D> objects;
 int main()
 {
     auto window = initializeGL();
-    // Definindo as dimensões da viewport com as mesmas dimensões da janela da aplicação
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
@@ -66,18 +64,12 @@ int main()
 
     objects = loadObjectConfigs((rootDir / "gb" / "config" / "objects.json").string(), rootDir.string());
 
-    glm::vec3 backLightPos = glm::vec3(-1.0f, 1.0f, -1.0f);
-    glm::vec3 keyLightPos = glm::vec3(-1.0f, -1.0f, 1.0f);
-    glm::vec3 fillLightPos = glm::vec3(1.0f, -1.0f, 1.0f);
-
     setupInitialObjects(objects, shader);
 
     glEnable(GL_DEPTH_TEST);
 
-    // Loop da aplicação - "game loop"
     while (!glfwWindowShouldClose(window))
     {
-        // Checa se houveram eventos de input (key pressed, mouse moved etc.) e chama as funções de callback correspondentes
         glfwPollEvents();
 
         // Limpa o buffer de cor
@@ -88,77 +80,87 @@ int main()
 
         for (int i = 0; i < objects.size(); i++)
         {
-            glUniform3fv(glGetUniformLocation(shader.ID, "lightPosKey"), 1, glm::value_ptr(keyLightPos));
-            glUniform3fv(glGetUniformLocation(shader.ID, "lightPosFill"), 1, glm::value_ptr(fillLightPos));
-            glUniform3fv(glGetUniformLocation(shader.ID, "lightPosBack"), 1, glm::value_ptr(backLightPos));
-
-            if (objects[i].isSelected)
-            {
-                if (incrementScale)
-                {
-                    incrementScale = false;
-                    objects[i].model = glm::scale(objects[i].model, glm::vec3(1.1f, 1.1f, 1.1f));
-                }
-
-                if (decrementScale)
-                {
-                    decrementScale = false;
-                    objects[i].model = glm::scale(objects[i].model, glm::vec3(0.9f, 0.9f, 0.9f));
-                }
-
-                // Atualiza rotação acumulativa
-                if (rotateW) // Rotação para cima (em torno de X)
-                {
-                    objects[i].model = glm::translate(objects[i].model, glm::vec3(0.0f, 0.01f, 0.0f));
-                    // objects[i].model = rotate(objects[i].model, radians(1.0f), vec3(1.0f, 0.0f, 0.0f));
-                }
-                else if (rotateS) // Rotação para baixo (em torno de X)
-                {
-                    objects[i].model = rotate(objects[i].model, radians(-1.0f), vec3(1.0f, 0.0f, 0.0f));
-                }
-                else if (rotateA) // Rotação para a esquerda (em torno de Y)
-                {
-                    objects[i].model = rotate(objects[i].model, radians(1.0f), vec3(0.0f, 1.0f, 0.0f));
-                }
-                else if (rotateD) // Rotação para a direita (em torno de Y)
-                {
-                    objects[i].model = rotate(objects[i].model, radians(-1.0f), vec3(0.0f, 1.0f, 0.0f));
-                }
-                else if (rotateJ) // Rotação em torno de Z (sentido horário)
-                {
-                    objects[i].model = rotate(objects[i].model, radians(1.0f), vec3(0.0f, 0.0f, 1.0f));
-                }
-                else if (rotateI) // Rotação em torno de Z (sentido anti-horário)
-                {
-                    objects[i].model = rotate(objects[i].model, radians(-1.0f), vec3(0.0f, 0.0f, 1.0f));
-                }
-            }
-
-            glBindVertexArray(objects[i].VAO);              // Conectando ao buffer de geometria
-            glBindTexture(GL_TEXTURE_2D, objects[i].texID); // conectando com o buffer de textura que será usado no draw
-
-            glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, value_ptr(objects[i].model));
-
-            // glUniform4f(glGetUniformLocation(shaderID, "inputColor"), color.r, color.g, color.b, 1.0f); // enviando cor para variável uniform inputColor
-            //   Chamada de desenho - drawcall
-            //   Poligono Preenchido - GL_TRIANGLES
-            glDrawArrays(GL_TRIANGLES, 0, (objects[i].positions.size() / 3));
-
-            glBindVertexArray(0); // Desconectando o buffer de geometria
+            handleLighting(shader.ID);
+            transformObject(objects[i]);
+            drawObject(objects[i], shader.ID);
         }
 
-        // Troca os buffers da tela
         glfwSwapBuffers(window);
     }
-    // Pede pra OpenGL desalocar os buffers
 
     for (auto &obj : objects)
     {
         glDeleteVertexArrays(1, &obj.VAO);
     }
-    // Finaliza a execução da GLFW, limpando os recursos alocados por ela
+
     glfwTerminate();
     return 0;
+}
+
+void handleLighting(GLuint shaderID)
+{
+    glm::vec3 backLightPos = glm::vec3(-1.0f, 1.0f, -1.0f);
+    glm::vec3 keyLightPos = glm::vec3(-1.0f, -1.0f, 1.0f);
+    glm::vec3 fillLightPos = glm::vec3(1.0f, -1.0f, 1.0f);
+
+    glUniform3fv(glGetUniformLocation(shaderID, "lightPosKey"), 1, glm::value_ptr(keyLightPos));
+    glUniform3fv(glGetUniformLocation(shaderID, "lightPosFill"), 1, glm::value_ptr(fillLightPos));
+    glUniform3fv(glGetUniformLocation(shaderID, "lightPosBack"), 1, glm::value_ptr(backLightPos));
+}
+
+void transformObject(Object3D &object)
+{
+    if (object.isSelected)
+    {
+        if (incrementScale)
+        {
+            incrementScale = false;
+            object.model = glm::scale(object.model, glm::vec3(1.1f, 1.1f, 1.1f));
+        }
+
+        if (decrementScale)
+        {
+            decrementScale = false;
+            object.model = glm::scale(object.model, glm::vec3(0.9f, 0.9f, 0.9f));
+        }
+
+        // Atualiza rotação acumulativa
+        if (rotateW) // Rotação para cima (em torno de X)
+        {
+            // TODO: Ajustar a rotação e translação
+            object.model = glm::translate(object.model, glm::vec3(0.0f, 0.1f, 0.0f));
+            // object.model = rotate(object.model, radians(1.0f), vec3(1.0f, 0.0f, 0.0f));
+        }
+        else if (rotateS) // Rotação para baixo (em torno de X)
+        {
+            object.model = rotate(object.model, radians(-0.1f), vec3(0.1f, 0.0f, 0.0f));
+        }
+        else if (rotateA) // Rotação para a esquerda (em torno de Y)
+        {
+            object.model = rotate(object.model, radians(0.1f), vec3(0.0f, 0.1f, 0.0f));
+        }
+        else if (rotateD) // Rotação para a direita (em torno de Y)
+        {
+            object.model = rotate(object.model, radians(-0.1f), vec3(0.0f, 0.1f, 0.0f));
+        }
+        else if (rotateJ) // Rotação em torno de Z (sentido horário)
+        {
+            object.model = rotate(object.model, radians(0.1f), vec3(0.0f, 0.0f, 0.1f));
+        }
+        else if (rotateI) // Rotação em torno de Z (sentido anti-horário)
+        {
+            object.model = rotate(object.model, radians(-0.1f), vec3(0.0f, 0.0f, 0.1f));
+        }
+    }
+}
+
+void drawObject(const Object3D &object, GLuint shaderID)
+{
+    glBindVertexArray(object.VAO);
+    glBindTexture(GL_TEXTURE_2D, object.texID);
+    glUniformMatrix4fv(glGetUniformLocation(shaderID, "model"), 1, GL_FALSE, value_ptr(object.model));
+    glDrawArrays(GL_TRIANGLES, 0, (object.positions.size() / 3));
+    glBindVertexArray(0);
 }
 
 GLFWwindow *initializeGL()
@@ -368,169 +370,4 @@ void setupGeometry(Object3D *object)
     glEnable(GL_DEPTH_TEST);
 
     object->VAO = VAO;
-}
-
-GLuint loadTexture(string filePath)
-{
-    int width, height;
-    GLuint texID; // id da textura a ser carregada
-
-    // Gera o identificador da textura na memória
-    glGenTextures(1, &texID);
-    glBindTexture(GL_TEXTURE_2D, texID);
-
-    // Ajuste dos parâmetros de wrapping e filtering
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    stbi_set_flip_vertically_on_load(true);
-
-    // Carregamento da imagem usando a função stbi_load da biblioteca stb_image
-    int nrChannels;
-
-    unsigned char *data = stbi_load(filePath.c_str(), &width, &height, &nrChannels, 0);
-
-    if (data)
-    {
-        if (nrChannels == 3) // jpg, bmp
-        {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        }
-        else // assume que é 4 canais png
-        {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        }
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture " << filePath << std::endl;
-    }
-
-    stbi_image_free(data);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    return texID;
-}
-
-void loadOBJ(Object3D *object)
-{
-    vector<glm::vec3> vertexIndices;
-    vector<glm::vec2> textureIndices;
-    vector<glm::vec3> normalIndices;
-
-    ifstream file(object->objPath);
-
-    if (!file.is_open())
-    {
-        cerr << "Failed to open file: " << object->objPath << endl;
-        return;
-    }
-
-    string line;
-    while (getline(file, line))
-    {
-        istringstream iss(line);
-        string prefix;
-        iss >> prefix;
-
-        if (prefix == "v")
-        {
-            float x, y, z;
-            iss >> x >> y >> z;
-            vertexIndices.push_back(glm::vec3(x, y, z));
-        }
-        else if (prefix == "vt")
-        {
-            float u, v;
-            iss >> u >> v;
-            textureIndices.push_back(glm::vec2(u, v));
-        }
-        else if (prefix == "vn")
-        {
-            float x, y, z;
-            iss >> x >> y >> z;
-            normalIndices.push_back(glm::vec3(x, y, z));
-        }
-        else if (prefix == "f")
-        {
-            string v1, v2, v3;
-            iss >> v1 >> v2 >> v3;
-
-            glm::ivec3 vIndices, tIndices, nIndices;
-            istringstream(v1.substr(0, v1.find('/'))) >> vIndices.x;
-            istringstream(v1.substr(v1.find('/') + 1, v1.rfind('/') - v1.find('/') - 1)) >> tIndices.x;
-            istringstream(v1.substr(v1.rfind('/') + 1)) >> nIndices.x;
-            istringstream(v2.substr(0, v2.find('/'))) >> vIndices.y;
-            istringstream(v2.substr(v2.find('/') + 1, v2.rfind('/') - v2.find('/') - 1)) >> tIndices.y;
-            istringstream(v2.substr(v2.rfind('/') + 1)) >> nIndices.y;
-            istringstream(v3.substr(0, v3.find('/'))) >> vIndices.z;
-            istringstream(v3.substr(v3.find('/') + 1, v3.rfind('/') - v3.find('/') - 1)) >> tIndices.z;
-            istringstream(v3.substr(v3.rfind('/') + 1)) >> nIndices.z;
-
-            for (int i = 0; i < 3; i++)
-            {
-                const glm::vec3 &vertex = vertexIndices[vIndices[i] - 1];
-                const glm::vec2 &texture = textureIndices[tIndices[i] - 1];
-                const glm::vec3 &normal = normalIndices[nIndices[i] - 1];
-
-                object->positions.push_back(vertex.x);
-                object->positions.push_back(vertex.y);
-                object->positions.push_back(vertex.z);
-                object->textureCoords.push_back(texture.x);
-                object->textureCoords.push_back(texture.y);
-                object->normals.push_back(normal.x);
-                object->normals.push_back(normal.y);
-                object->normals.push_back(normal.z);
-            }
-        }
-    }
-
-    file.close();
-}
-
-void loadMTL(Object3D *object)
-{
-    string line, readValue;
-    ifstream mtlFile(object->mtlPath);
-
-    cout << "Loading MTL file: " << object->mtlPath << endl;
-
-    if (!mtlFile.is_open())
-    {
-        cerr << "Failed to open file: " << object->mtlPath << endl;
-        return;
-    }
-
-    while (getline(mtlFile, line))
-    {
-        istringstream iss(line);
-
-        if (line.find("Ka") == 0)
-        {
-            float ka1, ka2, ka3;
-            iss >> readValue >> ka1 >> ka2 >> ka3;
-            object->ka.push_back(ka1);
-            object->ka.push_back(ka2);
-            object->ka.push_back(ka3);
-        }
-        else if (line.find("Ks") == 0)
-        {
-            float ks1, ks2, ks3;
-            iss >> readValue >> ks1 >> ks2 >> ks3;
-            object->ks.push_back(ks1);
-            object->ks.push_back(ks2);
-            object->ks.push_back(ks3);
-        }
-        else if (line.find("Ns") == 0)
-        {
-            iss >> readValue >> object->ns;
-        }
-    }
-
-    mtlFile.close();
 }

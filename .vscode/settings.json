@@ -54,7 +54,9 @@
         "forward_list": "cpp",
         "iomanip": "cpp",
         "ratio": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "span": "cpp",
+        "valarray": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
