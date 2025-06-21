@@ -60,7 +60,7 @@ int main()
     Shader shader(vertexShaderPath.c_str(), fragmentShaderPath.c_str());
     glUseProgram(shader.ID);
 
-    camera.initialize(&shader, width, height, 0.05f, 0.05f, -90.0f, glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(1.5f, 0.0f, 15.0f));
+    camera.initialize(&shader, width, height, 0.05f, 0.05f, -90.0f, glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, 15.0f));
 
     objects = loadObjectConfigs((rootDir / "gb" / "config" / "objects.json").string(), rootDir.string());
 
@@ -112,17 +112,8 @@ void transformObject(Object3D &object)
 {
     if (object.isSelected)
     {
-        if (incrementScale)
-        {
-            incrementScale = false;
-            object.model = glm::scale(object.model, glm::vec3(1.1f, 1.1f, 1.1f));
-        }
 
-        if (decrementScale)
-        {
-            decrementScale = false;
-            object.model = glm::scale(object.model, glm::vec3(0.9f, 0.9f, 0.9f));
-        }
+        // Translate -> Rotate -> Scale
 
         // Atualiza rotação acumulativa
         if (rotateW) // Rotação para cima (em torno de X)
@@ -133,23 +124,38 @@ void transformObject(Object3D &object)
         }
         else if (rotateS) // Rotação para baixo (em torno de X)
         {
-            object.model = rotate(object.model, radians(-0.1f), vec3(0.1f, 0.0f, 0.0f));
+            object.model = glm::translate(object.model, glm::vec3(0.0f, -0.1f, 0.0f));
+            // object.model = rotate(object.model, radians(-0.1f), vec3(0.1f, 0.0f, 0.0f));
         }
         else if (rotateA) // Rotação para a esquerda (em torno de Y)
         {
-            object.model = rotate(object.model, radians(0.1f), vec3(0.0f, 0.1f, 0.0f));
+            // object.model = rotate(object.model, radians(0.1f), vec3(0.0f, 0.1f, 0.0f));
+            object.model = glm::translate(object.model, glm::vec3(-0.1f, 0.0f, 0.0f));
         }
         else if (rotateD) // Rotação para a direita (em torno de Y)
         {
-            object.model = rotate(object.model, radians(-0.1f), vec3(0.0f, 0.1f, 0.0f));
+            // object.model = rotate(object.model, radians(-0.1f), vec3(0.0f, 0.1f, 0.0f));
+            object.model = glm::translate(object.model, glm::vec3(0.1f, 0.0f, 0.0f));
         }
         else if (rotateJ) // Rotação em torno de Z (sentido horário)
         {
-            object.model = rotate(object.model, radians(0.1f), vec3(0.0f, 0.0f, 0.1f));
+            object.model = rotate(object.model, radians(0.9f), vec3(0.0f, 0.0f, 0.1f));
         }
         else if (rotateI) // Rotação em torno de Z (sentido anti-horário)
         {
-            object.model = rotate(object.model, radians(-0.1f), vec3(0.0f, 0.0f, 0.1f));
+            object.model = rotate(object.model, radians(-0.9f), vec3(0.0f, 0.0f, 0.1f));
+        }
+
+        if (incrementScale)
+        {
+            incrementScale = false;
+            object.model = glm::scale(object.model, glm::vec3(1.1f, 1.1f, 1.1f));
+        }
+
+        if (decrementScale)
+        {
+            decrementScale = false;
+            object.model = glm::scale(object.model, glm::vec3(0.9f, 0.9f, 0.9f));
         }
     }
 }
@@ -227,10 +233,9 @@ void setupInitialObjects(vector<Object3D> &objects, Shader &shader)
 
         // Matriz de modelo: transformações na geometria (objeto)
         mat4 model = mat4(1.0f); // matriz identidade
-        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, value_ptr(model));
         model = glm::scale(model, glm::vec3(0.9f, 0.9f, 0.9f));
         model = glm::translate(model, glm::vec3(objects[i].initialPosition.x, objects[i].initialPosition.y, objects[i].initialPosition.z));
-        // model = glm::rotate(model, radians(1500.0f), glm::vec3(0.0f, 12.5f, 0.0f));
+        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, value_ptr(model));
         objects[i].model = model;
     }
 }
