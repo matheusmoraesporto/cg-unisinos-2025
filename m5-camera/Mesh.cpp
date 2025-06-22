@@ -12,12 +12,12 @@ void Mesh::initialize(GLuint VAO, int nVertices, Shader* shader, GLuint textureI
 	this->textureID = textureID;
 }
 
-void Mesh::update()
+void Mesh::update(glm::mat4 model)
 {
-	glm::mat4 model = glm::mat4(1);
-	model = glm::translate(model, position);
-	model = glm::rotate(model, glm::radians(angle), axis);
-	model = glm::scale(model, scale);
+	// glm::mat4 model = glm::mat4(1);
+	// model = glm::translate(model, position);
+	// model = glm::rotate(model, glm::radians(angle), axis);
+	// model = glm::scale(model, scale);
 	shader->setMat4("model", glm::value_ptr(model));
 }
 

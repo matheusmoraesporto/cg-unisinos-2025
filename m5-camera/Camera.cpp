@@ -13,6 +13,7 @@ void Camera::initialize(Shader *shader, int width, int height, float sensitivity
     this->camFront = camFront;
     this->camPos = camPos;
     this->camUp = camUp;
+    this->isSelected = true;
 
     // Matriz de view -- posição e orientação da câmera
     glm::mat4 view = glm::lookAt(glm::vec3(0.0, 0.0, 3.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));

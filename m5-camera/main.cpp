@@ -35,7 +35,7 @@ using namespace glm;
 
 // Protótipo da função de callback de teclado
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 
 // Protótipos das funções
 int setupShader();
@@ -45,13 +45,15 @@ void loadMTL(string path);
 void toggleLight(int shaderID, string light, vec3 vec);
 void drawGeometry(GLuint shaderID, GLuint VAO, vec3 position, vec3 dimensions, float angle, int nVertices, vec3 color = vec3(1.0, 0.0, 0.0), vec3 axis = (vec3(0.0, 0.0, 1.0)));
 GLuint generateSphere(float radius, int latSegments, int lonSegments, int &nVertices);
+void handleLighting(GLuint shaderID);
 
 // Dimensões da janela (pode ser alterado em tempo de execução)
 const GLuint WIDTH = 800, HEIGHT = 800;
 bool incrementScale = false;
 bool decrementScale = false;
-bool rotateW = false, rotateS = false, rotateA = false, rotateD = false, rotateI = false, rotateJ = false;
-bool toggleKeyLight = true, toggleFillLight = true, toggleBackLight = true;
+bool actionW = false, actionS = false, actionA = false, actionD = false, actionI = false, actionJ = false;
+bool isRotation = false;
+bool isTranslation = false;
 string vertexShaderPath = "/Users/i559431/unisinos/cg-unisinos-2025/m5-vivencial/shaders/vertex-shader.vs";
 string fragmentShaderPath = "/Users/i559431/unisinos/cg-unisinos-2025/m5-camera/shaders/fragment-shader.fs";
 string objPath = "/Users/i559431/unisinos/cg-unisinos-2025/m5-camera/objects/sphere.obj";
@@ -118,21 +120,11 @@ int main()
     int imgWidth, imgHeight;
     GLuint texID = loadTexture(texturePath, imgWidth, imgHeight);
 
-    vec3 camPos = vec3(0.0, 0.0, -3.0);
-
-    glm::vec3 backLightPos = glm::vec3(-1.0f, 1.0f, -1.0f);
-    glm::vec3 keyLightPos = glm::vec3 (-1.0f, -1.0f, 1.0f);
-    glm::vec3 fillLightPos = glm::vec3(1.0f, -1.0f, 1.0f);
-
-    toggleLight(shader.ID, "lightPosKey", keyLightPos);
-    toggleLight(shader.ID, "lightPosFill", fillLightPos);
-    toggleLight(shader.ID, "lightPosBack", backLightPos);
-
     glUseProgram(shader.ID);
 
     camera.initialize(&shader, width, height);
     Mesh mineSphere;
-	mineSphere.initialize(VAO, positions.size() / 3, &shader, texID);
+    mineSphere.initialize(VAO, positions.size() / 3, &shader, texID);
 
     // Enviar a informação de qual variável armazenará o buffer da textura
     glUniform1i(glGetUniformLocation(shader.ID, "texBuff"), 0);
@@ -142,15 +134,15 @@ int main()
     glUniform1f(glGetUniformLocation(shader.ID, "ks"), ks[0]);
     glUniform1f(glGetUniformLocation(shader.ID, "q"), ns);
 
-    glUniform3f(glGetUniformLocation(shader.ID, "camPos"), camPos.x, camPos.y, camPos.z);
+    // glUniform3f(glGetUniformLocation(shader.ID, "camPos"), camPos.x, camPos.y, camPos.z);
 
     // Ativando o primeiro buffer de textura da OpenGL
     glActiveTexture(GL_TEXTURE0);
 
     // Matriz de projeção paralela ortográfica
     // mat4 projection = ortho(-10.0, 10.0, -10.0, 10.0, -1.0, 1.0);
-    mat4 projection = ortho(-1.0, 1.0, -1.0, 1.0, -3.0, 3.0);
-    glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, value_ptr(projection));
+    // mat4 projection = ortho(-1.0, 1.0, -1.0, 1.0, -3.0, 3.0);
+    // glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, value_ptr(projection));
 
     // Matriz de modelo: transformações na geometria (objeto)
     mat4 model = mat4(1); // matriz identidade
@@ -168,9 +160,73 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // cor de fundo
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        handleLighting(shader.ID);
+
         camera.update();
-		mineSphere.draw();
-		mineSphere.update();
+        mineSphere.draw();
+
+        if (incrementScale)
+        {
+            incrementScale = false;
+            model = glm::scale(model, glm::vec3(1.1f, 1.1f, 1.1f));
+        }
+
+        if (decrementScale)
+        {
+            decrementScale = false;
+            model = glm::scale(model, glm::vec3(0.9f, 0.9f, 0.9f));
+        }
+
+        if (isRotation)
+        {
+            // Atualiza rotação acumulativa
+            if (actionW) // Rotação para cima (em torno de X)
+            {
+                model = rotate(model, radians(1.0f), vec3(1.0f, 0.0f, 0.0f));
+            }
+            else if (actionS) // Rotação para baixo (em torno de X)
+            {
+                model = rotate(model, radians(-1.0f), vec3(1.0f, 0.0f, 0.0f));
+            }
+            else if (actionA) // Rotação para a esquerda (em torno de Y)
+            {
+                model = rotate(model, radians(1.0f), vec3(0.0f, 1.0f, 0.0f));
+            }
+            else if (actionD) // Rotação para a direita (em torno de Y)
+            {
+                model = rotate(model, radians(-1.0f), vec3(0.0f, 1.0f, 0.0f));
+            }
+            else if (actionJ) // Rotação em torno de Z (sentido horário)
+            {
+                model = rotate(model, radians(1.0f), vec3(0.0f, 0.0f, 1.0f));
+            }
+            else if (actionI) // Rotação em torno de Z (sentido anti-horário)
+            {
+                model = rotate(model, radians(-1.0f), vec3(0.0f, 0.0f, 1.0f));
+            }
+        }
+
+        if (isTranslation)
+        {
+            if (actionW)
+            {
+                model = glm::translate(model, glm::vec3(0.0f, 0.01f, 0.0f));
+            }
+            else if (actionS)
+            {
+                model = glm::translate(model, glm::vec3(0.0f, -0.01f, 0.0f));
+            }
+            else if (actionA)
+            {
+                model = glm::translate(model, glm::vec3(-0.01f, 0.0f, 0.0f));
+            }
+            else if (actionD)
+            {
+                model = glm::translate(model, glm::vec3(0.01f, 0.0f, 0.0f));
+            }
+        }
+
+        mineSphere.update(model);
 
         glBindVertexArray(VAO);              // Conectando ao buffer de geometria
         glBindTexture(GL_TEXTURE_2D, texID); // conectando com o buffer de textura que será usado no draw
@@ -194,9 +250,15 @@ int main()
     return 0;
 }
 
-void toggleLight(int shaderID, string light, vec3 vec)
+void handleLighting(GLuint shaderID)
 {
-    glUniform3fv(glGetUniformLocation(shaderID, light.c_str()), 1, glm::value_ptr(vec));
+    glm::vec3 backLightPos = glm::vec3(-1.0f, 1.0f, -1.0f);
+    glm::vec3 keyLightPos = glm::vec3(-1.0f, -1.0f, 1.0f);
+    glm::vec3 fillLightPos = glm::vec3(1.0f, -1.0f, 1.0f);
+
+    glUniform3fv(glGetUniformLocation(shaderID, "lightPosKey"), 1, glm::value_ptr(keyLightPos));
+    glUniform3fv(glGetUniformLocation(shaderID, "lightPosFill"), 1, glm::value_ptr(fillLightPos));
+    glUniform3fv(glGetUniformLocation(shaderID, "lightPosBack"), 1, glm::value_ptr(backLightPos));
 }
 
 // Função de callback de teclado - só pode ter uma instância (deve ser estática se
@@ -207,14 +269,101 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
 
-    camera.move(window, key, action);
+    if (key == GLFW_KEY_C && action == GLFW_PRESS)
+    {
+        // TODO: Uncomment me
+        // objects[0].isSelected = false;
+        // objects[1].isSelected = false;
+        // camera.isSelected = true;
+
+        // TODO: Remove me
+        camera.isSelected = !camera.isSelected;
+    }
+
+    if (camera.isSelected)
+        camera.move(window, key, action);
+    else
+    {
+        if (key == GLFW_KEY_R && action == GLFW_PRESS)
+        {
+            isTranslation = false;
+            isRotation = true;
+        }
+
+        if (key == GLFW_KEY_T && action == GLFW_PRESS)
+        {
+            isRotation = false;
+            isTranslation = true;
+        }
+
+        if (key == GLFW_KEY_W)
+        {
+            if (action == GLFW_PRESS)
+            {
+                actionW = true;
+            }
+            else if (action == GLFW_RELEASE)
+                actionW = false;
+        }
+
+        if (key == GLFW_KEY_S)
+        {
+            if (action == GLFW_PRESS)
+                actionS = true;
+            else if (action == GLFW_RELEASE)
+                actionS = false;
+        }
+
+        if (key == GLFW_KEY_A)
+        {
+            if (action == GLFW_PRESS)
+                actionA = true;
+            else if (action == GLFW_RELEASE)
+                actionA = false;
+        }
+
+        if (key == GLFW_KEY_D)
+        {
+            if (action == GLFW_PRESS)
+                actionD = true;
+            else if (action == GLFW_RELEASE)
+                actionD = false;
+        }
+
+        if (key == GLFW_KEY_I)
+        {
+            if (action == GLFW_PRESS)
+                actionI = true;
+            else if (action == GLFW_RELEASE)
+                actionI = false;
+        }
+
+        if (key == GLFW_KEY_J)
+        {
+            if (action == GLFW_PRESS)
+                actionJ = true;
+            else if (action == GLFW_RELEASE)
+                actionJ = false;
+        }
+
+        if (key == GLFW_KEY_LEFT_BRACKET && action == GLFW_PRESS)
+        {
+            decrementScale = true;
+        }
+
+        if (key == GLFW_KEY_RIGHT_BRACKET && action == GLFW_PRESS)
+        {
+            incrementScale = true;
+        }
+    }
 }
 
-void mouse_callback(GLFWwindow* window, double posX, double posY)
+void mouse_callback(GLFWwindow *window, double posX, double posY)
 {
-    cout << "Mouse position: " << posX << ", " << posY << endl;
-
-	camera.rotate(window, posX, posY);
+    if (camera.isSelected)
+    {
+        camera.rotate(window, posX, posY);
+    }
 }
 
 GLuint loadTexture(string filePath, int &width, int &height)
@@ -283,83 +432,33 @@ void drawGeometry(GLuint shaderID, GLuint VAO, vec3 position, vec3 dimensions, f
 
 GLuint generateSphere(float radius, int latSegments, int lonSegments, int &nVertices)
 {
-    vector<GLfloat> vBuffer; // Posição + Cor + Normal + UV
-
-    vec3 color = vec3(1.0f, 0.0f, 0.0f); // Laranja
-
-    auto calcPosUVNormal = [&](int lat, int lon, vec3 &pos, vec2 &uv, vec3 &normal)
-    {
-        float theta = lat * pi<float>() / latSegments;
-        float phi = lon * 2.0f * pi<float>() / lonSegments;
-
-        pos = vec3(
-            radius * cos(phi) * sin(theta),
-            radius * cos(theta),
-            radius * sin(phi) * sin(theta));
-
-        uv = vec2(
-            phi / (2.0f * pi<float>()), // u
-            theta / pi<float>()         // v
-        );
-
-        // Normal é a posição normalizada (posição/radius)
-        normal = normalize(pos);
-    };
-
-    for (int i = 0; i < latSegments; ++i)
-    {
-        for (int j = 0; j < lonSegments; ++j)
-        {
-            vec3 v0, v1, v2, v3;
-            vec2 uv0, uv1, uv2, uv3;
-            vec3 n0, n1, n2, n3;
-
-            calcPosUVNormal(i, j, v0, uv0, n0);
-            calcPosUVNormal(i + 1, j, v1, uv1, n1);
-            calcPosUVNormal(i, j + 1, v2, uv2, n2);
-            calcPosUVNormal(i + 1, j + 1, v3, uv3, n3);
-
-            // Primeiro triângulo
-            vBuffer.insert(vBuffer.end(), {v0.x, v0.y, v0.z, color.r, color.g, color.b, n0.x, n0.y, n0.z, uv0.x, uv0.y});
-            vBuffer.insert(vBuffer.end(), {v1.x, v1.y, v1.z, color.r, color.g, color.b, n1.x, n1.y, n1.z, uv1.x, uv1.y});
-            vBuffer.insert(vBuffer.end(), {v2.x, v2.y, v2.z, color.r, color.g, color.b, n2.x, n2.y, n2.z, uv2.x, uv2.y});
-
-            // Segundo triângulo
-            vBuffer.insert(vBuffer.end(), {v1.x, v1.y, v1.z, color.r, color.g, color.b, n1.x, n1.y, n1.z, uv1.x, uv1.y});
-            vBuffer.insert(vBuffer.end(), {v3.x, v3.y, v3.z, color.r, color.g, color.b, n3.x, n3.y, n3.z, uv3.x, uv3.y});
-            vBuffer.insert(vBuffer.end(), {v2.x, v2.y, v2.z, color.r, color.g, color.b, n2.x, n2.y, n2.z, uv2.x, uv2.y});
-        }
-    }
-
-    // Criar VAO e VBO
-    GLuint VAO, VBO;
+    GLuint VAO;
     glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
     glBindVertexArray(VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vBuffer.size() * sizeof(GLfloat), vBuffer.data(), GL_STATIC_DRAW);
+    GLuint VBO[3];
+    glGenBuffers(3, VBO);
 
-    // Layout da posição (location 0)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (GLvoid *)(0));
+    // Positions
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+    glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(GLfloat), positions.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
     glEnableVertexAttribArray(0);
 
-    // Layout da cor (location 1)
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (GLvoid *)(3 * sizeof(GLfloat)));
+    // Texture Coords
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+    glBufferData(GL_ARRAY_BUFFER, textureCoords.size() * sizeof(GLfloat), textureCoords.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
     glEnableVertexAttribArray(1);
 
-    // Layout da normal (location 2)
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (GLvoid *)(6 * sizeof(GLfloat)));
+    // Normals
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(GLfloat), normals.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
     glEnableVertexAttribArray(2);
 
-    // Layout da UV (location 3)
-    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (GLvoid *)(9 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(3);
-
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-
-    nVertices = vBuffer.size() / 11; // Cada vértice agora tem 11 floats!
 
     return VAO;
 }

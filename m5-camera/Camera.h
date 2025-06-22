@@ -16,6 +16,7 @@ public:
     void move(GLFWwindow *window, int key, int action);
     void rotate(GLFWwindow *window, double xpos, double ypos);
     void update();
+    bool isSelected;
 
 protected:
     Shader *shader;
