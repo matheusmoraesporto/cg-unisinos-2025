@@ -5,17 +5,16 @@
             "objPath": "/gb/objects/pokeball/sphere.obj",
             "mtlPath": "/gb/objects/pokeball/sphere.mtl",
             "texturePath": "/gb/objects/pokeball/pokeball.jpg",
+            "scale": 0.9,
             "position": {
                 "x": -3.0,
                 "y": 0.0,
-                "z": 0.0,
-                "scale": 0.1
+                "z": 0.0
             },
             "rotation": {
-                "x": 220.0,
-                "y": -120.0,
-                "z": 0.0,
-                "scale": 0.1
+                "x": -180.0,
+                "y": 90.0,
+                "z": 0.0
             }
         },
         {
@@ -23,6 +22,7 @@
             "objPath": "/gb/objects/minecraft/sphere.obj",
             "mtlPath": "/gb/objects/minecraft/sphere.mtl",
             "texturePath": "/gb/objects/minecraft/minecraft.jpg",
+            "scale": 0.4,
             "position": {
                 "x": 3.0,
                 "y": 0.0,
@@ -30,10 +30,9 @@
                 "scale": 0.1
             },
             "rotation": {
-                "x": 0.1,
-                "y": 0.1,
-                "z": 0.0,
-                "scale": 0.9
+                "x": 180.0,
+                "y": 0.0,
+                "z": 0.0
             }
         }
     ]

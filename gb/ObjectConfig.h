@@ -13,7 +13,7 @@ struct Vertex
 
 struct Matrix
 {
-    float x, y, z, scale;
+    float x, y, z;
 };
 
 struct Object3D
@@ -23,6 +23,7 @@ struct Object3D
     std::string objPath;
     std::string mtlPath;
     std::string texturePath;
+    float scale;
     Matrix position;
     Matrix rotation;
 
@@ -34,14 +35,10 @@ struct Object3D
     std::vector<GLfloat> ks;
     float ns;
 
-    std::vector<Vertex> vertices;
-    std::vector<glm::u32vec3> triangle_indices;
-
     // Propriedades do objeto 3D definidos em runtime
     GLuint texID;
     GLuint VAO;
     glm::mat4 model;
-    GLint modelLoc;
     bool isSelected;
 };
 

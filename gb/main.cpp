@@ -245,8 +245,10 @@ void setupInitialObjects(vector<Object3D> &objects, Shader &shader)
         // Matriz de modelo: transformações na geometria (objeto)
         mat4 model = mat4(1.0f); // matriz identidade
         model = glm::translate(model, glm::vec3(objects[i].position.x, objects[i].position.y, objects[i].position.z));
-        model = glm::rotate(model, glm::radians(30.0f), glm::vec3(objects[i].rotation.x, objects[i].rotation.y, objects[i].rotation.z));
-        model = glm::scale(model, glm::vec3(0.9f, 0.9f, 0.9f));
+        model = glm::rotate(model, glm::radians(objects[i].rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(objects[i].rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(objects[i].rotation.z), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(objects[i].scale, objects[i].scale, objects[i].scale));
         glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, value_ptr(model));
         objects[i].model = model;
     }
