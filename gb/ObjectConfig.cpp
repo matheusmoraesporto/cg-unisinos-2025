@@ -8,10 +8,8 @@ using json = nlohmann::json;
 
 std::vector<Object3D> loadObjectConfigs(const std::string &configPath, const std::string &rootDir)
 {
-    std::cout << "Loading object configurations from: " << configPath << std::endl;
     std::vector<Object3D> objects;
     std::ifstream file(configPath);
-    std::cout << "Opening config file: " << configPath << std::endl;
     if (!file.is_open())
     {
         std::cerr << "Failed to open config file: " << configPath << std::endl;

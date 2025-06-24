@@ -90,9 +90,6 @@ void loadMTL(Object3D *object)
 {
     std::string line, readValue;
     std::ifstream mtlFile(object->mtlPath);
-
-    std::cout << "Loading MTL file: " << object->mtlPath << std::endl;
-
     if (!mtlFile.is_open())
     {
         std::cerr << "Failed to open file: " << object->mtlPath << std::endl;

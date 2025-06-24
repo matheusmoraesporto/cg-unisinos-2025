@@ -35,20 +35,26 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 
 // Protótipos das funções
+void printCommands();
 GLFWwindow *initializeGL();
 void setupInitialObjects(vector<Object3D> &objects, Shader &shader);
 void setupGeometry(Object3D *object);
 void handleLighting(GLuint shaderID);
 void transformObject(Object3D &object);
 void drawObject(const Object3D &object, GLuint shaderID);
+void handleTranslation(Object3D &object);
+void handleRotation(Object3D &object);
+void handleScale(Object3D &object);
 
-bool incrementScale = false, decrementScale = false;
-bool rotateW = false, rotateS = false, rotateA = false, rotateD = false, rotateI = false, rotateJ = false;
+bool incrementScale = false, decrementScale = false, isRotating = false, isTranslating = false;
+bool actionW = false, actionS = false, actionA = false, actionD = false, actionI = false, actionJ = false;
 Camera camera;
 vector<Object3D> objects;
 
 int main()
 {
+    printCommands();
+
     auto window = initializeGL();
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
@@ -97,6 +103,33 @@ int main()
     return 0;
 }
 
+void printCommands()
+{
+    // TODO: Adicionar qual o comando vai startar e pausar o movimento com curva
+    cout << "Comandos para interagir com a cena:" << endl;
+    cout << "==========================================================" << endl;
+    cout << "Seleção de objetos:" << endl;
+    cout << "   ==> C - Selecionar câmera" << endl;
+    cout << "   ==> 0 - Selecionar a pokebola" << endl;
+    cout << "   ==> 1 - Selecionar a esfera minecraft" << endl;
+    cout << "==========================================================" << endl;
+    cout << "Quando a câmera estiver selecionada:" << endl;
+    cout << "   ==> A, W, S, D - movimentam a câmera" << endl;
+    cout << "   ==> a câmera também acompanha a movimentação do mouse" << endl;
+    cout << "==========================================================" << endl;
+    cout << "Quando um dos objetos estiver selecionado:" << endl;
+    cout << "   ==> [ - para diminuit a escala" << endl;
+    cout << "   ==> ] - para aumentar a escala" << endl;
+    cout << "   ==> R - para rotacionar" << endl;
+    cout << "       ==> W e S - para rotacionar no eixo X" << endl;
+    cout << "       ==> A e D - para rotacionar no eixo Y" << endl;
+    cout << "       ==> I e J - para rotacionar no eixo Z" << endl;
+    cout << "   ==> T - para transladar" << endl;
+    cout << "       ==> W e S - para transladar no eixo X" << endl;
+    cout << "       ==> A e D - para transladar no eixo Y" << endl;
+    cout << "       ==> I e J - para transladar no eixo Z" << endl;
+}
+
 void handleLighting(GLuint shaderID)
 {
     glm::vec3 backLightPos = glm::vec3(-1.0f, 1.0f, -1.0f);
@@ -112,62 +145,86 @@ void transformObject(Object3D &object)
 {
     if (object.isSelected)
     {
-        // TODO: Perguntar para o chat, pq a rotação em Z funciona mas a rotação em X e Y movimentam o objeto ao invés de rotacionar
+        handleRotation(object);
+        handleTranslation(object);
+        handleScale(object);
+    }
+}
 
-        // Translate -> Rotate -> Scale
-
-        // Atualiza rotação acumulativa
-        // if (rotateW) // Rotação para cima (em torno de X)
-        // {
-        //     // TODO: Ajustar a rotação e translação
-        //     // object.model = glm::translate(object.model, glm::vec3(0.0f, 0.1f, 0.0f));
-
-        // object.model = glm::rotate(object.model, glm::radians(0.9f), glm::vec3(0.1f, 0.0f, 0.0f));
-        if (rotateW)
+void handleRotation(Object3D &object)
+{
+    if (isRotating)
+    {
+        if (actionW)
         {
             object.model = glm::rotate(object.model, glm::radians(-0.9f), glm::vec3(1.0f, 0.0f, 0.0f));
         }
-
-        // }
-        else if (rotateS) // Rotação para baixo (em torno de X)
+        else if (actionS)
         {
-            // object.model = glm::translate(object.model, glm::vec3(0.0f, -0.1f, 0.0f));
-
             object.model = glm::rotate(object.model, glm::radians(0.9f), glm::vec3(-0.1f, 0.0f, 0.0f));
         }
-        else if (rotateA) // Rotação para a esquerda (em torno de Y)
+        else if (actionA)
         {
-            // object.model = rotate(object.model, radians(0.1f), vec3(0.0f, 0.1f, 0.0f));
-            // object.model = glm::translate(object.model, glm::vec3(-0.1f, 0.0f, 0.0f));
             object.model = glm::rotate(object.model, glm::radians(0.9f), glm::vec3(0.0f, -0.1f, 0.0f));
         }
-        else if (rotateD) // Rotação para a direita (em torno de Y)
+        else if (actionD)
         {
-            // object.model = rotate(object.model, radians(0.9f), vec3(0.0f, 0.1f, 0.0f));
-            // object.model = glm::translate(object.model, glm::vec3(0.1f, 0.0f, 0.0f));
-
             object.model = glm::rotate(object.model, glm::radians(0.9f), glm::vec3(0.0f, 0.1f, 0.0f));
         }
-        else if (rotateJ) // Rotação em torno de Z (sentido horário)
+        else if (actionJ)
         {
             object.model = rotate(object.model, radians(0.9f), vec3(0.0f, 0.0f, 0.1f));
         }
-        else if (rotateI) // Rotação em torno de Z (sentido anti-horário)
+        else if (actionI)
         {
             object.model = rotate(object.model, radians(-0.9f), vec3(0.0f, 0.0f, 0.1f));
         }
+    }
+}
 
-        if (incrementScale)
+void handleTranslation(Object3D &object)
+{
+    if (isTranslating)
+    {
+        if (actionW)
         {
-            incrementScale = false;
-            object.model = glm::scale(object.model, glm::vec3(1.1f, 1.1f, 1.1f));
+            object.model = glm::translate(object.model, glm::vec3(0.0f, 0.1f, 0.0f));
         }
+        else if (actionS)
+        {
+            object.model = glm::translate(object.model, glm::vec3(0.0f, -0.1f, 0.0f));
+        }
+        else if (actionA)
+        {
+            object.model = glm::translate(object.model, glm::vec3(-0.1f, 0.0f, 0.0f));
+        }
+        else if (actionD)
+        {
+            object.model = glm::translate(object.model, glm::vec3(0.1f, 0.0f, 0.0f));
+        }
+        else if (actionJ)
+        {
+            object.model = glm::translate(object.model, glm::vec3(0.0f, 0.0f, 0.1f));
+        }
+        else if (actionI)
+        {
+            object.model = glm::translate(object.model, glm::vec3(0.0f, 0.0f, -0.1f));
+        }
+    }
+}
 
-        if (decrementScale)
-        {
-            decrementScale = false;
-            object.model = glm::scale(object.model, glm::vec3(0.9f, 0.9f, 0.9f));
-        }
+void handleScale(Object3D &object)
+{
+    if (incrementScale)
+    {
+        incrementScale = false;
+        object.model = glm::scale(object.model, glm::vec3(1.1f, 1.1f, 1.1f));
+    }
+
+    if (decrementScale)
+    {
+        decrementScale = false;
+        object.model = glm::scale(object.model, glm::vec3(0.9f, 0.9f, 0.9f));
     }
 }
 
@@ -224,8 +281,6 @@ void setupInitialObjects(vector<Object3D> &objects, Shader &shader)
     {
         loadOBJ(&objects[i]);
         loadMTL(&objects[i]);
-
-        cout << "VAO ID: " << objects[i].VAO << endl;
         // Gerar o VAO para o objeto
         setupGeometry(&objects[i]);
 
@@ -259,6 +314,9 @@ void setupInitialObjects(vector<Object3D> &objects, Shader &shader)
 // ou solta via GLFW
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode)
 {
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GL_TRUE);
+
     if (key == GLFW_KEY_0 && action == GLFW_PRESS)
     {
         objects[0].isSelected = true;
@@ -286,57 +344,66 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     }
     else
     {
-        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, GL_TRUE);
+        if (key == GLFW_KEY_R && action == GLFW_PRESS)
+        {
+            isRotating = true;
+            isTranslating = false;
+        }
+
+        if (key == GLFW_KEY_T && action == GLFW_PRESS)
+        {
+            isTranslating = true;
+            isRotating = false;
+        }
 
         if (key == GLFW_KEY_W)
         {
             if (action == GLFW_PRESS)
             {
-                rotateW = true;
+                actionW = true;
             }
             else if (action == GLFW_RELEASE)
-                rotateW = false;
+                actionW = false;
         }
 
         if (key == GLFW_KEY_S)
         {
             if (action == GLFW_PRESS)
-                rotateS = true;
+                actionS = true;
             else if (action == GLFW_RELEASE)
-                rotateS = false;
+                actionS = false;
         }
 
         if (key == GLFW_KEY_A)
         {
             if (action == GLFW_PRESS)
-                rotateA = true;
+                actionA = true;
             else if (action == GLFW_RELEASE)
-                rotateA = false;
+                actionA = false;
         }
 
         if (key == GLFW_KEY_D)
         {
             if (action == GLFW_PRESS)
-                rotateD = true;
+                actionD = true;
             else if (action == GLFW_RELEASE)
-                rotateD = false;
+                actionD = false;
         }
 
         if (key == GLFW_KEY_I)
         {
             if (action == GLFW_PRESS)
-                rotateI = true;
+                actionI = true;
             else if (action == GLFW_RELEASE)
-                rotateI = false;
+                actionI = false;
         }
 
         if (key == GLFW_KEY_J)
         {
             if (action == GLFW_PRESS)
-                rotateJ = true;
+                actionJ = true;
             else if (action == GLFW_RELEASE)
-                rotateJ = false;
+                actionJ = false;
         }
 
         if (key == GLFW_KEY_LEFT_BRACKET && action == GLFW_PRESS)
