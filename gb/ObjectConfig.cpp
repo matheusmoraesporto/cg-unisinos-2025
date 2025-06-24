@@ -29,16 +29,16 @@ std::vector<Object3D> loadObjectConfigs(const std::string &configPath, const std
         o.objPath = rootDir + obj.value("objPath", "");
         o.mtlPath = rootDir + obj.value("mtlPath", "");
         o.texturePath = rootDir + obj.value("texturePath", "");
-        o.initialPosition = {
-            obj["initialPosition"].value("x", 0.0f),
-            obj["initialPosition"].value("y", 0.0f),
-            obj["initialPosition"].value("z", 0.0f),
-            obj["initialPosition"].value("scale", 0.0f),
+        o.position = {
+            obj["position"].value("x", 0.0f),
+            obj["position"].value("y", 0.0f),
+            obj["position"].value("z", 0.0f),
+            obj["position"].value("scale", 0.0f),
         };
-        o.initialRotation = {
-            obj["initialRotation"].value("x", 0.0f),
-            obj["initialRotation"].value("y", 0.0f),
-            obj["initialRotation"].value("scale", 0.0f),
+        o.rotation = {
+            obj["rotation"].value("x", 0.0f),
+            obj["rotation"].value("y", 0.0f),
+            obj["rotation"].value("scale", 0.0f),
         };
         o.isSelected = i == 0;
         objects.push_back(o);

@@ -112,30 +112,41 @@ void transformObject(Object3D &object)
 {
     if (object.isSelected)
     {
+        // TODO: Perguntar para o chat, pq a rotação em Z funciona mas a rotação em X e Y movimentam o objeto ao invés de rotacionar
 
         // Translate -> Rotate -> Scale
 
         // Atualiza rotação acumulativa
-        if (rotateW) // Rotação para cima (em torno de X)
+        // if (rotateW) // Rotação para cima (em torno de X)
+        // {
+        //     // TODO: Ajustar a rotação e translação
+        //     // object.model = glm::translate(object.model, glm::vec3(0.0f, 0.1f, 0.0f));
+
+        // object.model = glm::rotate(object.model, glm::radians(0.9f), glm::vec3(0.1f, 0.0f, 0.0f));
+        if (rotateW)
         {
-            // TODO: Ajustar a rotação e translação
-            object.model = glm::translate(object.model, glm::vec3(0.0f, 0.1f, 0.0f));
-            // object.model = rotate(object.model, radians(1.0f), vec3(1.0f, 0.0f, 0.0f));
+            object.model = glm::rotate(object.model, glm::radians(-0.9f), glm::vec3(1.0f, 0.0f, 0.0f));
         }
+
+        // }
         else if (rotateS) // Rotação para baixo (em torno de X)
         {
-            object.model = glm::translate(object.model, glm::vec3(0.0f, -0.1f, 0.0f));
-            // object.model = rotate(object.model, radians(-0.1f), vec3(0.1f, 0.0f, 0.0f));
+            // object.model = glm::translate(object.model, glm::vec3(0.0f, -0.1f, 0.0f));
+
+            object.model = glm::rotate(object.model, glm::radians(0.9f), glm::vec3(-0.1f, 0.0f, 0.0f));
         }
         else if (rotateA) // Rotação para a esquerda (em torno de Y)
         {
             // object.model = rotate(object.model, radians(0.1f), vec3(0.0f, 0.1f, 0.0f));
-            object.model = glm::translate(object.model, glm::vec3(-0.1f, 0.0f, 0.0f));
+            // object.model = glm::translate(object.model, glm::vec3(-0.1f, 0.0f, 0.0f));
+            object.model = glm::rotate(object.model, glm::radians(0.9f), glm::vec3(0.0f, -0.1f, 0.0f));
         }
         else if (rotateD) // Rotação para a direita (em torno de Y)
         {
-            // object.model = rotate(object.model, radians(-0.1f), vec3(0.0f, 0.1f, 0.0f));
-            object.model = glm::translate(object.model, glm::vec3(0.1f, 0.0f, 0.0f));
+            // object.model = rotate(object.model, radians(0.9f), vec3(0.0f, 0.1f, 0.0f));
+            // object.model = glm::translate(object.model, glm::vec3(0.1f, 0.0f, 0.0f));
+
+            object.model = glm::rotate(object.model, glm::radians(0.9f), glm::vec3(0.0f, 0.1f, 0.0f));
         }
         else if (rotateJ) // Rotação em torno de Z (sentido horário)
         {
@@ -233,8 +244,9 @@ void setupInitialObjects(vector<Object3D> &objects, Shader &shader)
 
         // Matriz de modelo: transformações na geometria (objeto)
         mat4 model = mat4(1.0f); // matriz identidade
+        model = glm::translate(model, glm::vec3(objects[i].position.x, objects[i].position.y, objects[i].position.z));
+        model = glm::rotate(model, glm::radians(30.0f), glm::vec3(objects[i].rotation.x, objects[i].rotation.y, objects[i].rotation.z));
         model = glm::scale(model, glm::vec3(0.9f, 0.9f, 0.9f));
-        model = glm::translate(model, glm::vec3(objects[i].initialPosition.x, objects[i].initialPosition.y, objects[i].initialPosition.z));
         glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, value_ptr(model));
         objects[i].model = model;
     }
@@ -347,32 +359,33 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 
 void setupGeometry(Object3D *object)
 {
-    GLuint VAO, VBO[3];
-
+    GLuint VAO;
     glGenVertexArrays(1, &VAO);
-    glGenBuffers(2, VBO);
-
     glBindVertexArray(VAO);
 
+    GLuint VBO[3];
+    glGenBuffers(3, VBO);
+
+    // Positions
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
     glBufferData(GL_ARRAY_BUFFER, object->positions.size() * sizeof(GLfloat), object->positions.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
     glEnableVertexAttribArray(0);
 
+    // Texture Coords
     glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
     glBufferData(GL_ARRAY_BUFFER, object->textureCoords.size() * sizeof(GLfloat), object->textureCoords.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
     glEnableVertexAttribArray(1);
 
+    // Normals
     glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
     glBufferData(GL_ARRAY_BUFFER, object->normals.size() * sizeof(GLfloat), object->normals.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
     glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-
-    glEnable(GL_DEPTH_TEST);
 
     object->VAO = VAO;
 }

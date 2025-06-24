@@ -23,8 +23,8 @@ struct Object3D
     std::string objPath;
     std::string mtlPath;
     std::string texturePath;
-    Matrix initialPosition;
-    Matrix initialRotation;
+    Matrix position;
+    Matrix rotation;
 
     // Propriedades do objeto 3D lidas do arquivo OBJ/MTL
     std::vector<GLfloat> positions;
