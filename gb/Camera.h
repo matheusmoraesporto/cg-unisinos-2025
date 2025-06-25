@@ -16,7 +16,9 @@ public:
 	void move(GLFWwindow *window, int key, int action);
 	void rotate(GLFWwindow *window, double xpos, double ypos);
 	void update();
-	bool isSelected;
+	bool isSelected();
+	void select();
+	void unselect();
 
 protected:
 	Shader *shader;
@@ -24,4 +26,5 @@ protected:
 	float lastX, lastY, pitch, yaw;
 	float sensitivity;
 	glm::vec3 cameraFront, cameraPos, cameraUp;
+	bool selected;
 };

@@ -10,7 +10,7 @@ void Camera::initialize(Shader *shader, int width, int height, float sensitivity
 	this->cameraFront = cameraFront;
 	this->cameraPos = cameraPos;
 	this->cameraUp = cameraUp;
-	this->isSelected = true;
+	this->selected = true;
 
 glm::mat4 view = glm::lookAt(glm::vec3(0.0, 0.0, 3.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
 	shader->setMat4("view", value_ptr(view));
@@ -80,4 +80,19 @@ void Camera::move(GLFWwindow *window, int key, int action)
 	{
 		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 	}
+}
+
+bool Camera::isSelected()
+{
+	return selected;
+}
+
+void Camera::select()
+{
+	selected = true;
+}
+
+void Camera::unselect()
+{
+	selected = false;
 }

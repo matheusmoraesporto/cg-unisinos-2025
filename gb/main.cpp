@@ -1,12 +1,6 @@
-// Standard Library
 #include <iostream>
-#include <string>
 #include <vector>
-#include <fstream>
-#include <sstream>
 #include <filesystem>
-#include <cassert>
-#include <cmath>
 
 // OpenGL Loader
 #include <glad/glad.h>
@@ -16,15 +10,12 @@
 
 // GLM
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 // Project Headers
-#include "stb_image.h"
 #include "Shader.h"
 #include "Camera.h"
 #include "ObjectConfig.h"
-#include "ObjectReader.h"
 
 using namespace std;
 using namespace glm;
@@ -37,14 +28,8 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 // Protótipos das funções
 void printCommands();
 GLFWwindow *initializeGL();
-void setupInitialObjects(vector<Object3D> &objects, Shader &shader);
-void setupGeometry(Object3D *object);
 void handleLighting(GLuint shaderID);
-void transformObject(Object3D &object);
-void drawObject(const Object3D &object, GLuint shaderID);
-void handleTranslation(Object3D &object);
-void handleRotation(Object3D &object);
-void handleScale(Object3D &object);
+void resetScaleVariables();
 
 bool incrementScale = false, decrementScale = false, isRotating = false, isTranslating = false;
 bool actionW = false, actionS = false, actionA = false, actionD = false, actionI = false, actionJ = false;
@@ -68,9 +53,14 @@ int main()
 
     camera.initialize(&shader, width, height, 0.05f, 0.05f, -90.0f, glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, 15.0f));
 
-    objects = loadObjectConfigs((rootDir / "gb" / "config" / "objects.json").string(), rootDir.string());
+    objects = loadObjectConfigs((rootDir / "gb" / "config" / "objects.json").string(), rootDir.string(), &shader);
 
-    setupInitialObjects(objects, shader);
+    for (int i = 0; i < objects.size(); i++)
+    {
+        objects[i].initialSetup();
+    }
+
+    handleLighting(shader.ID);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -86,11 +76,22 @@ int main()
 
         for (int i = 0; i < objects.size(); i++)
         {
-            handleLighting(shader.ID);
-            transformObject(objects[i]);
-            drawObject(objects[i], shader.ID);
+            objects[i].transform(
+                isRotating,
+                isTranslating,
+                actionW,
+                actionS,
+                actionA,
+                actionD,
+                actionI,
+                actionJ,
+                incrementScale,
+                decrementScale);
+
+            objects[i].draw();
         }
 
+        resetScaleVariables();
         glfwSwapBuffers(window);
     }
 
@@ -101,6 +102,12 @@ int main()
 
     glfwTerminate();
     return 0;
+}
+
+void resetScaleVariables()
+{
+    incrementScale = false;
+    decrementScale = false;
 }
 
 void printCommands()
@@ -141,102 +148,6 @@ void handleLighting(GLuint shaderID)
     glUniform3fv(glGetUniformLocation(shaderID, "lightPosBack"), 1, glm::value_ptr(backLightPos));
 }
 
-void transformObject(Object3D &object)
-{
-    if (object.isSelected)
-    {
-        handleRotation(object);
-        handleTranslation(object);
-        handleScale(object);
-    }
-}
-
-void handleRotation(Object3D &object)
-{
-    if (isRotating)
-    {
-        if (actionW)
-        {
-            object.model = glm::rotate(object.model, glm::radians(-0.9f), glm::vec3(1.0f, 0.0f, 0.0f));
-        }
-        else if (actionS)
-        {
-            object.model = glm::rotate(object.model, glm::radians(0.9f), glm::vec3(-0.1f, 0.0f, 0.0f));
-        }
-        else if (actionA)
-        {
-            object.model = glm::rotate(object.model, glm::radians(0.9f), glm::vec3(0.0f, -0.1f, 0.0f));
-        }
-        else if (actionD)
-        {
-            object.model = glm::rotate(object.model, glm::radians(0.9f), glm::vec3(0.0f, 0.1f, 0.0f));
-        }
-        else if (actionJ)
-        {
-            object.model = rotate(object.model, radians(0.9f), vec3(0.0f, 0.0f, 0.1f));
-        }
-        else if (actionI)
-        {
-            object.model = rotate(object.model, radians(-0.9f), vec3(0.0f, 0.0f, 0.1f));
-        }
-    }
-}
-
-void handleTranslation(Object3D &object)
-{
-    if (isTranslating)
-    {
-        if (actionW)
-        {
-            object.model = glm::translate(object.model, glm::vec3(0.0f, 0.1f, 0.0f));
-        }
-        else if (actionS)
-        {
-            object.model = glm::translate(object.model, glm::vec3(0.0f, -0.1f, 0.0f));
-        }
-        else if (actionA)
-        {
-            object.model = glm::translate(object.model, glm::vec3(-0.1f, 0.0f, 0.0f));
-        }
-        else if (actionD)
-        {
-            object.model = glm::translate(object.model, glm::vec3(0.1f, 0.0f, 0.0f));
-        }
-        else if (actionJ)
-        {
-            object.model = glm::translate(object.model, glm::vec3(0.0f, 0.0f, 0.1f));
-        }
-        else if (actionI)
-        {
-            object.model = glm::translate(object.model, glm::vec3(0.0f, 0.0f, -0.1f));
-        }
-    }
-}
-
-void handleScale(Object3D &object)
-{
-    if (incrementScale)
-    {
-        incrementScale = false;
-        object.model = glm::scale(object.model, glm::vec3(1.1f, 1.1f, 1.1f));
-    }
-
-    if (decrementScale)
-    {
-        decrementScale = false;
-        object.model = glm::scale(object.model, glm::vec3(0.9f, 0.9f, 0.9f));
-    }
-}
-
-void drawObject(const Object3D &object, GLuint shaderID)
-{
-    glBindVertexArray(object.VAO);
-    glBindTexture(GL_TEXTURE_2D, object.texID);
-    glUniformMatrix4fv(glGetUniformLocation(shaderID, "model"), 1, GL_FALSE, value_ptr(object.model));
-    glDrawArrays(GL_TRIANGLES, 0, (object.positions.size() / 3));
-    glBindVertexArray(0);
-}
-
 GLFWwindow *initializeGL()
 {
     // Inicialização da GLFW
@@ -275,40 +186,6 @@ GLFWwindow *initializeGL()
     return window;
 }
 
-void setupInitialObjects(vector<Object3D> &objects, Shader &shader)
-{
-    for (int i = 0; i < objects.size(); i++)
-    {
-        loadOBJ(&objects[i]);
-        loadMTL(&objects[i]);
-        // Gerar o VAO para o objeto
-        setupGeometry(&objects[i]);
-
-        objects[i].texID = loadTexture(objects[i].texturePath);
-
-        // Enviar a informação de qual variável armazenará o buffer da textura
-        glUniform1i(glGetUniformLocation(shader.ID, "texBuff"), 0);
-
-        glUniform1f(glGetUniformLocation(shader.ID, "ka"), objects[i].ka[0]);
-        glUniform1f(glGetUniformLocation(shader.ID, "kd"), 0.5);
-        glUniform1f(glGetUniformLocation(shader.ID, "ks"), objects[i].ks[0]);
-        glUniform1f(glGetUniformLocation(shader.ID, "q"), objects[i].ns);
-
-        // Ativando o primeiro buffer de textura da OpenGL
-        glActiveTexture(GL_TEXTURE0);
-
-        // Matriz de modelo: transformações na geometria (objeto)
-        mat4 model = mat4(1.0f); // matriz identidade
-        model = glm::translate(model, glm::vec3(objects[i].position.x, objects[i].position.y, objects[i].position.z));
-        model = glm::rotate(model, glm::radians(objects[i].rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(objects[i].rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(objects[i].rotation.z), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(objects[i].scale, objects[i].scale, objects[i].scale));
-        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, value_ptr(model));
-        objects[i].model = model;
-    }
-}
-
 // Função de callback de teclado - só pode ter uma instância (deve ser estática se
 // estiver dentro de uma classe) - É chamada sempre que uma tecla for pressionada
 // ou solta via GLFW
@@ -319,26 +196,26 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
     if (key == GLFW_KEY_0 && action == GLFW_PRESS)
     {
-        objects[0].isSelected = true;
-        objects[1].isSelected = false;
-        camera.isSelected = false;
+        objects[0].select();
+        objects[1].unselect();
+        camera.unselect();
     }
 
     if (key == GLFW_KEY_1 && action == GLFW_PRESS)
     {
-        objects[0].isSelected = false;
-        objects[1].isSelected = true;
-        camera.isSelected = false;
+        objects[0].unselect();
+        objects[1].select();
+        camera.unselect();
     }
 
     if (key == GLFW_KEY_C && action == GLFW_PRESS)
     {
-        objects[0].isSelected = false;
-        objects[1].isSelected = false;
-        camera.isSelected = true;
+        objects[0].unselect();
+        objects[1].unselect();
+        camera.select();
     }
 
-    if (camera.isSelected)
+    if (camera.isSelected())
     {
         camera.move(window, key, action);
     }
@@ -420,41 +297,8 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
 void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 {
-    if (camera.isSelected)
+    if (camera.isSelected())
     {
         camera.rotate(window, xpos, ypos);
     }
-}
-
-void setupGeometry(Object3D *object)
-{
-    GLuint VAO;
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    GLuint VBO[3];
-    glGenBuffers(3, VBO);
-
-    // Positions
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-    glBufferData(GL_ARRAY_BUFFER, object->positions.size() * sizeof(GLfloat), object->positions.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
-    glEnableVertexAttribArray(0);
-
-    // Texture Coords
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-    glBufferData(GL_ARRAY_BUFFER, object->textureCoords.size() * sizeof(GLfloat), object->textureCoords.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
-    glEnableVertexAttribArray(1);
-
-    // Normals
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
-    glBufferData(GL_ARRAY_BUFFER, object->normals.size() * sizeof(GLfloat), object->normals.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
-    glEnableVertexAttribArray(2);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    object->VAO = VAO;
 }
