@@ -12,13 +12,22 @@ class Camera
 public:
 	Camera() {}
 	~Camera() {}
-	void initialize(Shader *shader, int width, int height, float sensitivity = 0.05, float pitch = 0.0, float yaw = -90.0, glm::vec3 cameraFront = glm::vec3(0.0, 0.0, -1.0), glm::vec3 cameraPos = glm::vec3(0.0, 0.0, 3.0), glm::vec3 cameraUp = glm::vec3(0.0, 1.0, 0.0));
+	void initialize(
+		Shader *shader,
+		int width,
+		int height,
+		float sensitivity,
+		float pitch,
+		float yaw,
+		glm::vec3 cameraFront,
+		glm::vec3 cameraPos,
+		glm::vec3 cameraUp);
 	void move(GLFWwindow *window, int key, int action);
 	void rotate(GLFWwindow *window, double xpos, double ypos);
 	void update();
-	bool isSelected();
-	void select();
-	void unselect();
+	bool isSelected() { return selected; };
+	void select() { selected = true; };
+	void unselect() { selected = false; };
 
 protected:
 	Shader *shader;

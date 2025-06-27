@@ -51,9 +51,14 @@ int main()
     Shader shader(vertexShaderPath.c_str(), fragmentShaderPath.c_str());
     glUseProgram(shader.ID);
 
-    camera.initialize(&shader, width, height, 0.05f, 0.05f, -90.0f, glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, 15.0f));
-
-    objects = loadObjectConfigs((rootDir / "gb" / "config" / "objects.json").string(), rootDir.string(), &shader);
+    loadObjectConfigs(
+        (rootDir / "gb" / "config" / "objects.json").string(),
+        rootDir.string(),
+        &objects,
+        &camera,
+        &shader,
+        width,
+        height);
 
     for (int i = 0; i < objects.size(); i++)
     {

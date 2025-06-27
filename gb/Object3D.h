@@ -18,7 +18,7 @@ private:
     glm::vec3 position;
     glm::vec3 rotation;
     std::vector<glm::vec3> trajectoryPoints;
-    float trajectoryT; // tempo de animação da trajetória
+    float trajectoryT;     // tempo de animação da trajetória
     float trajectorySpeed; // velocidade da animação da trajetória
 
     // Propriedades do objeto 3D lidas do arquivo OBJ/MTL
@@ -28,7 +28,7 @@ private:
     std::vector<GLfloat> ka;
     std::vector<GLfloat> ks;
     float ns;
-    
+
     // Propriedades do objeto 3D definidos em runtime
     Shader *shader;
     GLuint texID;
@@ -68,8 +68,7 @@ public:
         glm::vec3 rotation,
         std::vector<glm::vec3> trajectoryPoints,
         float trajectorySpeed,
-        Shader *shader
-    );
+        Shader *shader);
 
     void initialSetup();
 
@@ -84,19 +83,17 @@ public:
         bool actionI,
         bool actionJ,
         bool incrementScale,
-        bool decrementScale
-    );
+        bool decrementScale);
 
     void draw();
 
-    void select();
-    void unselect();
+    void select() { isSelected = true; };
+    void unselect() { isSelected = false; };
     void updateTrajectory();
     glm::vec3 bezierCurve(
-        float t, 
-        glm::vec3 P0, 
-        glm::vec3 P1, 
-        glm::vec3 P2, 
-        glm::vec3 P3
-    );
+        float t,
+        glm::vec3 P0,
+        glm::vec3 P1,
+        glm::vec3 P2,
+        glm::vec3 P3);
 };

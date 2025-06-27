@@ -362,16 +362,6 @@ void Object3D::loadTexture()
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Object3D::select()
-{
-    isSelected = true;
-}
-
-void Object3D::unselect()
-{
-    isSelected = false;
-}
-
 void Object3D::updateTrajectory()
 {
     // Pegue os 4 pontos do segmento atual
