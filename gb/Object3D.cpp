@@ -430,7 +430,7 @@ void Object3D::keyAction(int key, int action)
 {
     if (key == GLFW_KEY_R && action == GLFW_PRESS)
     {
-        cout << "R key pressed, now you can rotate." << endl;
+        cout << "R selecionado, agora você pode rotacionar o objeto." << endl;
         isRotating = true;
         isTranslating = false;
         isCurving = false;
@@ -438,7 +438,7 @@ void Object3D::keyAction(int key, int action)
 
     if (key == GLFW_KEY_T && action == GLFW_PRESS)
     {
-        cout << "T key pressed, now you can translate." << endl;
+        cout << "T pressionado, agora você pode transladar o objeto." << endl;
         isTranslating = true;
         isRotating = false;
         isCurving = false;
@@ -446,7 +446,7 @@ void Object3D::keyAction(int key, int action)
 
     if (key == GLFW_KEY_X && action == GLFW_PRESS)
     {
-        cout << "X key pressed, now the object will movement in curve." << endl;
+        cout << "X pressionado, agora o objeto irá se movimentar em curva." << endl;
         isCurving = true;
         isRotating = false;
         isTranslating = false;
@@ -456,9 +456,6 @@ void Object3D::keyAction(int key, int action)
     {
         if (action == GLFW_PRESS)
         {
-            cout << "key W is" << GLFW_KEY_W << endl;
-
-            cout << "key pressed" << key << endl;
             keyPressed = key;
         }
         else if (action == GLFW_RELEASE)

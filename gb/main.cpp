@@ -167,13 +167,22 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         glfwSetWindowShouldClose(window, GL_TRUE);
 
     if (key == GLFW_KEY_0 && action == GLFW_PRESS)
+    {
+        cout << "Pokebola selecionada." << endl;
         selectObject(0);
+    }
 
     if (key == GLFW_KEY_1 && action == GLFW_PRESS)
+    {
+        cout << "Esfera Minecraft selecionada." << endl;
         selectObject(1);
+    }
 
     if (key == GLFW_KEY_C && action == GLFW_PRESS)
+    {
+        cout << "Câmera selecionada." << endl;
         selectObject(-1);
+    }
 
     if (camera.isSelected())
         camera.move(window, key, action);
