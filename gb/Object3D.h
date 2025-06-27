@@ -38,25 +38,20 @@ private:
     glm::mat4 model;
     int currentPointIndex = 0;
     bool isSelected;
+    int keyPressed = -1;
+    bool isRotating = false;
+    bool isTranslating = false;
+    bool isCurving = false;
+    bool incrementScale = false;
+    bool decrementScale = false;
 
     void loadOBJ();
     void loadMTL();
     void loadTexture();
     void setupGeometry();
-    void translate(
-        bool actionW,
-        bool actionS,
-        bool actionA,
-        bool actionD,
-        bool actionI,
-        bool actionJ);
-    void rotate(
-        bool actionW,
-        bool actionS,
-        bool actionA,
-        bool actionD,
-        bool actionI,
-        bool actionJ);
+    void verifyScaleAction();
+    void translate();
+    void rotate();
     void updateModelMatrix();
 
 public:
@@ -77,22 +72,9 @@ public:
         Shader *shader);
 
     void initialSetup();
-
-    void transform(
-        bool isRotating,
-        bool isTranslating,
-        bool isCurving,
-        bool actionW,
-        bool actionS,
-        bool actionA,
-        bool actionD,
-        bool actionI,
-        bool actionJ,
-        bool incrementScale,
-        bool decrementScale);
-
+    void transform();
     void draw();
-
+    void keyAction(int key, int action);
     void select() { isSelected = true; };
     void unselect() { isSelected = false; };
     void updateTrajectory();

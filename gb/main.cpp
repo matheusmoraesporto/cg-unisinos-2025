@@ -28,12 +28,11 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 // Protótipos das funções
 void printCommands();
 GLFWwindow *initializeGL();
-void resetScaleVariables();
+void selectObject(int objIndex);
 
-bool incrementScale = false, decrementScale = false, isRotating = false, isTranslating = false, isCurving = false;
-bool actionW = false, actionS = false, actionA = false, actionD = false, actionI = false, actionJ = false;
 Camera camera;
 vector<Object3D> objects;
+int selectedObject = -1;
 
 int main()
 {
@@ -78,23 +77,10 @@ int main()
 
         for (int i = 0; i < objects.size(); i++)
         {
-            objects[i].transform(
-                isRotating,
-                isTranslating,
-                isCurving,
-                actionW,
-                actionS,
-                actionA,
-                actionD,
-                actionI,
-                actionJ,
-                incrementScale,
-                decrementScale);
-
+            objects[i].transform();
             objects[i].draw();
         }
 
-        resetScaleVariables();
         glfwSwapBuffers(window);
     }
 
@@ -105,12 +91,6 @@ int main()
 
     glfwTerminate();
     return 0;
-}
-
-void resetScaleVariables()
-{
-    incrementScale = false;
-    decrementScale = false;
 }
 
 void printCommands()
@@ -187,119 +167,39 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         glfwSetWindowShouldClose(window, GL_TRUE);
 
     if (key == GLFW_KEY_0 && action == GLFW_PRESS)
-    {
-        objects[0].select();
-        objects[1].unselect();
-        camera.unselect();
-    }
+        selectObject(0);
 
     if (key == GLFW_KEY_1 && action == GLFW_PRESS)
-    {
-        objects[0].unselect();
-        objects[1].select();
-        camera.unselect();
-    }
+        selectObject(1);
 
     if (key == GLFW_KEY_C && action == GLFW_PRESS)
-    {
-        objects[0].unselect();
-        objects[1].unselect();
-        camera.select();
-    }
+        selectObject(-1);
 
     if (camera.isSelected())
-    {
         camera.move(window, key, action);
-    }
     else
-    {
-        if (key == GLFW_KEY_R && action == GLFW_PRESS)
-        {
-            isRotating = true;
-            isTranslating = false;
-            isCurving = false;
-        }
-
-        if (key == GLFW_KEY_T && action == GLFW_PRESS)
-        {
-            isTranslating = true;
-            isRotating = false;
-            isCurving = false;
-        }
-
-        if (key == GLFW_KEY_X && action == GLFW_PRESS)
-        {
-            isCurving = true;
-            isRotating = false;
-            isTranslating = false;
-        }
-
-        if (key == GLFW_KEY_W)
-        {
-            if (action == GLFW_PRESS)
-            {
-                actionW = true;
-            }
-            else if (action == GLFW_RELEASE)
-                actionW = false;
-        }
-
-        if (key == GLFW_KEY_S)
-        {
-            if (action == GLFW_PRESS)
-                actionS = true;
-            else if (action == GLFW_RELEASE)
-                actionS = false;
-        }
-
-        if (key == GLFW_KEY_A)
-        {
-            if (action == GLFW_PRESS)
-                actionA = true;
-            else if (action == GLFW_RELEASE)
-                actionA = false;
-        }
-
-        if (key == GLFW_KEY_D)
-        {
-            if (action == GLFW_PRESS)
-                actionD = true;
-            else if (action == GLFW_RELEASE)
-                actionD = false;
-        }
-
-        if (key == GLFW_KEY_I)
-        {
-            if (action == GLFW_PRESS)
-                actionI = true;
-            else if (action == GLFW_RELEASE)
-                actionI = false;
-        }
-
-        if (key == GLFW_KEY_J)
-        {
-            if (action == GLFW_PRESS)
-                actionJ = true;
-            else if (action == GLFW_RELEASE)
-                actionJ = false;
-        }
-
-        if (key == GLFW_KEY_LEFT_BRACKET && action == GLFW_PRESS)
-        {
-            decrementScale = true;
-        }
-
-        if (key == GLFW_KEY_RIGHT_BRACKET && action == GLFW_PRESS)
-        {
-            incrementScale = true;
-        }
-    }
+        objects[selectedObject].keyAction(key, action);
 }
 
 void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 {
     if (camera.isSelected())
-    {
         camera.rotate(window, xpos, ypos);
+}
+
+void selectObject(int objIndex)
+{
+    selectedObject = objIndex;
+    if (selectedObject < 0)
+        camera.select();
+    else
+        camera.unselect();
+
+    for (int i = 0; i < objects.size(); i++)
+    {
+        if (i == selectedObject)
+            objects[i].select();
+        else
+            objects[i].unselect();
     }
 }

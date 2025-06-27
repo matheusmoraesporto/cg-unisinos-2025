@@ -99,39 +99,20 @@ void Object3D::setupGeometry()
     glBindVertexArray(0);
 }
 
-void Object3D::transform(
-    bool isRotating,
-    bool isTranslating,
-    bool isCurving,
-    bool actionW,
-    bool actionS,
-    bool actionA,
-    bool actionD,
-    bool actionI,
-    bool actionJ,
-    bool incrementScale,
-    bool decrementScale)
+void Object3D::transform()
 {
     if (isSelected)
     {
+        verifyScaleAction();
+
         if (isRotating)
         {
-            rotate(actionW, actionS, actionA, actionD, actionI, actionJ);
+            rotate();
         }
 
         if (isTranslating)
         {
-            translate(actionW, actionS, actionA, actionD, actionI, actionJ);
-        }
-
-        if (incrementScale)
-        {
-            scale *= 1.1f;
-        }
-
-        if (decrementScale)
-        {
-            scale *= 0.9f;
+            translate();
         }
 
         if (isCurving)
@@ -152,28 +133,33 @@ void Object3D::draw()
     glBindVertexArray(0);
 }
 
-void Object3D::translate(
-    bool actionW,
-    bool actionS,
-    bool actionA,
-    bool actionD,
-    bool actionI,
-    bool actionJ)
+void Object3D::translate()
 {
     glm::vec3 delta(0.0f);
 
-    if (actionW)
+    switch (keyPressed)
+    {
+    case GLFW_KEY_W:
         delta.y += 0.1f;
-    if (actionS)
+        break;
+    case GLFW_KEY_S:
         delta.y -= 0.1f;
-    if (actionA)
+        break;
+    case GLFW_KEY_A:
         delta.x -= 0.1f;
-    if (actionD)
+        break;
+    case GLFW_KEY_D:
         delta.x += 0.1f;
-    if (actionJ)
+        break;
+    case GLFW_KEY_J:
         delta.z += 0.1f;
-    if (actionI)
+        break;
+    case GLFW_KEY_I:
         delta.z -= 0.1f;
+        break;
+    default:
+        break;
+    }
 
     position += delta;
 }
@@ -182,34 +168,37 @@ void Object3D::updateModelMatrix()
 {
     model = glm::mat4(1.0f);
     model = glm::translate(model, position);
-
     model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
     model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
     model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
     model = glm::scale(model, glm::vec3(scale, scale, scale));
 }
 
-void Object3D::rotate(
-    bool actionW,
-    bool actionS,
-    bool actionA,
-    bool actionD,
-    bool actionI,
-    bool actionJ)
+void Object3D::rotate()
 {
-    if (actionW)
+    switch (keyPressed)
+    {
+    case GLFW_KEY_W:
         rotation.x -= 0.9f;
-    if (actionS)
+        break;
+    case GLFW_KEY_S:
         rotation.x += 0.9f;
-    if (actionA)
+        break;
+    case GLFW_KEY_A:
         rotation.y -= 0.9f;
-    if (actionD)
+        break;
+    case GLFW_KEY_D:
         rotation.y += 0.9f;
-    if (actionI)
+        break;
+    case GLFW_KEY_I:
         rotation.z -= 0.9f;
-    if (actionJ)
+        break;
+    case GLFW_KEY_J:
         rotation.z += 0.9f;
+        break;
+    default:
+        break;
+    }
 }
 
 void Object3D::loadOBJ()
@@ -420,4 +409,71 @@ glm::vec3 Object3D::bezierCurve(float t, glm::vec3 P0, glm::vec3 P1, glm::vec3 P
     point += ttt * P3;          // t^3 * P3
 
     return point;
+}
+
+void Object3D::verifyScaleAction()
+{
+    if (incrementScale)
+    {
+        scale *= 1.1f;
+        incrementScale = false; // Reseta a variável após aplicar o incremento
+    }
+
+    if (decrementScale)
+    {
+        scale *= 0.9f;
+        decrementScale = false; // Reseta a variável após aplicar o decremento
+    }
+}
+
+void Object3D::keyAction(int key, int action)
+{
+    if (key == GLFW_KEY_R && action == GLFW_PRESS)
+    {
+        cout << "R key pressed, now you can rotate." << endl;
+        isRotating = true;
+        isTranslating = false;
+        isCurving = false;
+    }
+
+    if (key == GLFW_KEY_T && action == GLFW_PRESS)
+    {
+        cout << "T key pressed, now you can translate." << endl;
+        isTranslating = true;
+        isRotating = false;
+        isCurving = false;
+    }
+
+    if (key == GLFW_KEY_X && action == GLFW_PRESS)
+    {
+        cout << "X key pressed, now the object will movement in curve." << endl;
+        isCurving = true;
+        isRotating = false;
+        isTranslating = false;
+    }
+
+    if (key == GLFW_KEY_W || key == GLFW_KEY_S || key == GLFW_KEY_A || key == GLFW_KEY_D || key == GLFW_KEY_I || key == GLFW_KEY_J)
+    {
+        if (action == GLFW_PRESS)
+        {
+            cout << "key W is" << GLFW_KEY_W << endl;
+
+            cout << "key pressed" << key << endl;
+            keyPressed = key;
+        }
+        else if (action == GLFW_RELEASE)
+        {
+            keyPressed = -1;
+        }
+    }
+
+    if (key == GLFW_KEY_LEFT_BRACKET && action == GLFW_PRESS)
+    {
+        decrementScale = true;
+    }
+
+    if (key == GLFW_KEY_RIGHT_BRACKET && action == GLFW_PRESS)
+    {
+        incrementScale = true;
+    }
 }
