@@ -57,6 +57,7 @@ void camInit(Camera *camera, Shader *shader, int width, int height, json j)
         jCam.value("sensitivity", 0.0f),
         jCam.value("pitch", 0.0f),
         jCam.value("yaw", 0.0f),
+        jCam.value("speed", 0.0f),
         front,
         position,
         up);

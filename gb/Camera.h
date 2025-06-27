@@ -19,6 +19,7 @@ public:
 		float sensitivity,
 		float pitch,
 		float yaw,
+		float speed,
 		glm::vec3 cameraFront,
 		glm::vec3 cameraPos,
 		glm::vec3 cameraUp);
@@ -33,7 +34,7 @@ protected:
 	Shader *shader;
 	bool firstMouse, rotateX, rotateY, rotateZ;
 	float lastX, lastY, pitch, yaw;
-	float sensitivity;
+	float sensitivity, speed;
 	glm::vec3 cameraFront, cameraPos, cameraUp;
 	bool selected;
 };
