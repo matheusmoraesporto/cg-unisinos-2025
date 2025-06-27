@@ -17,8 +17,10 @@ void Object3D::initialize(
     std::string mtlPath,
     std::string texturePath,
     float scale,
-    Matrix position,
-    Matrix rotation,
+    glm::vec3 position,
+    glm::vec3 rotation,
+    std::vector<glm::vec3> trajectoryPoints,
+    float trajectorySpeed,
     Shader *shader)
 {
     this->name = name;
@@ -29,7 +31,11 @@ void Object3D::initialize(
     this->position = position;
     this->rotation = rotation;
     this->shader = shader;
+    this->trajectoryPoints = trajectoryPoints;
     this->model = glm::mat4(1.0f); // matriz identidade
+    this->currentPointIndex = 0;
+    this->trajectoryT = 0.0f;
+    this->trajectorySpeed = trajectorySpeed;
 }
 
 void Object3D::initialSetup()
@@ -92,6 +98,7 @@ void Object3D::setupGeometry()
 void Object3D::transform(
     bool isRotating,
     bool isTranslating,
+    bool isCurving,
     bool actionW,
     bool actionS,
     bool actionA,
@@ -115,13 +122,20 @@ void Object3D::transform(
 
         if (incrementScale)
         {
-            model = glm::scale(model, glm::vec3(1.1f, 1.1f, 1.1f));
+            scale *= 1.1f;
         }
 
         if (decrementScale)
         {
-            model = glm::scale(model, glm::vec3(0.9f, 0.9f, 0.9f));
+            scale *= 0.9f;
         }
+
+        if (isCurving)
+        {
+            updateTrajectory();
+        }
+
+        updateModelMatrix();
     }
 }
 
@@ -142,30 +156,34 @@ void Object3D::translate(
     bool actionI,
     bool actionJ)
 {
+    glm::vec3 delta(0.0f);
+
     if (actionW)
-    {
-        model = glm::translate(model, glm::vec3(0.0f, 0.1f, 0.0f));
-    }
-    else if (actionS)
-    {
-        model = glm::translate(model, glm::vec3(0.0f, -0.1f, 0.0f));
-    }
-    else if (actionA)
-    {
-        model = glm::translate(model, glm::vec3(-0.1f, 0.0f, 0.0f));
-    }
-    else if (actionD)
-    {
-        model = glm::translate(model, glm::vec3(0.1f, 0.0f, 0.0f));
-    }
-    else if (actionJ)
-    {
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.1f));
-    }
-    else if (actionI)
-    {
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, -0.1f));
-    }
+        delta.y += 0.1f;
+    if (actionS)
+        delta.y -= 0.1f;
+    if (actionA)
+        delta.x -= 0.1f;
+    if (actionD)
+        delta.x += 0.1f;
+    if (actionJ)
+        delta.z += 0.1f;
+    if (actionI)
+        delta.z -= 0.1f;
+
+    position += delta;
+}
+
+void Object3D::updateModelMatrix()
+{
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, position);
+
+    model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    model = glm::scale(model, glm::vec3(scale, scale, scale));
 }
 
 void Object3D::rotate(
@@ -177,29 +195,17 @@ void Object3D::rotate(
     bool actionJ)
 {
     if (actionW)
-    {
-        model = glm::rotate(model, glm::radians(-0.9f), glm::vec3(1.0f, 0.0f, 0.0f));
-    }
-    else if (actionS)
-    {
-        model = glm::rotate(model, glm::radians(0.9f), glm::vec3(0.1f, 0.0f, 0.0f));
-    }
-    else if (actionA)
-    {
-        model = glm::rotate(model, glm::radians(-0.9f), glm::vec3(0.0f, 0.1f, 0.0f));
-    }
-    else if (actionD)
-    {
-        model = glm::rotate(model, glm::radians(0.9f), glm::vec3(0.0f, 0.1f, 0.0f));
-    }
-    else if (actionJ)
-    {
-        model = glm::rotate(model, glm::radians(0.9f), glm::vec3(0.0f, 0.0f, 0.1f));
-    }
-    else if (actionI)
-    {
-        model = glm::rotate(model, glm::radians(-0.9f), glm::vec3(0.0f, 0.0f, 0.1f));
-    }
+        rotation.x -= 0.9f;
+    if (actionS)
+        rotation.x += 0.9f;
+    if (actionA)
+        rotation.y -= 0.9f;
+    if (actionD)
+        rotation.y += 0.9f;
+    if (actionI)
+        rotation.z -= 0.9f;
+    if (actionJ)
+        rotation.z += 0.9f;
 }
 
 void Object3D::loadOBJ()
@@ -369,4 +375,57 @@ void Object3D::select()
 void Object3D::unselect()
 {
     isSelected = false;
+}
+
+void Object3D::updateTrajectory()
+{
+    // Pegue os 4 pontos do segmento atual
+    int idx = currentPointIndex * 3;
+    if (idx + 3 >= trajectoryPoints.size())
+    {
+        // Voltar para o início da trajetória para loop contínuo
+        currentPointIndex = 0;
+        idx = 0;
+    }
+
+    glm::vec3 p0 = trajectoryPoints[idx];
+    glm::vec3 p1 = trajectoryPoints[idx + 1];
+    glm::vec3 p2 = trajectoryPoints[idx + 2];
+    glm::vec3 p3 = trajectoryPoints[idx + 3];
+
+
+
+    // Avança o parâmetro t pela velocidade
+    trajectoryT += trajectorySpeed;
+
+    if (trajectoryT > 1.0f)
+    {
+        // Passa para o próximo segmento
+        trajectoryT = 0.0f;
+        currentPointIndex++;
+        if (currentPointIndex * 3 + 3 >= trajectoryPoints.size())
+            currentPointIndex = 0; // loop
+    }
+
+    // Calcula a posição na curva usando Bézier cúbica
+    position = bezierCurve(trajectoryT, p0, p1, p2, p3);
+
+    // Atualiza a matriz modelo para a nova posição
+    updateModelMatrix();
+}
+
+glm::vec3 Object3D::bezierCurve(float t, glm::vec3 P0, glm::vec3 P1, glm::vec3 P2, glm::vec3 P3)
+{
+    float u = 1 - t;
+    float tt = t * t;
+    float uu = u * u;
+    float uuu = uu * u;
+    float ttt = tt * t;
+
+    glm::vec3 point = uuu * P0; // (1-t)^3 * P0
+    point += 3 * uu * t * P1;   // 3(1-t)^2 * t * P1
+    point += 3 * u * tt * P2;   // 3(1-t) * t^2 * P2
+    point += ttt * P3;          // t^3 * P3
+
+    return point;
 }

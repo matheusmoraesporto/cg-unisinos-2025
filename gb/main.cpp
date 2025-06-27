@@ -31,7 +31,7 @@ GLFWwindow *initializeGL();
 void handleLighting(GLuint shaderID);
 void resetScaleVariables();
 
-bool incrementScale = false, decrementScale = false, isRotating = false, isTranslating = false;
+bool incrementScale = false, decrementScale = false, isRotating = false, isTranslating = false, isCurving = false;
 bool actionW = false, actionS = false, actionA = false, actionD = false, actionI = false, actionJ = false;
 Camera camera;
 vector<Object3D> objects;
@@ -79,6 +79,7 @@ int main()
             objects[i].transform(
                 isRotating,
                 isTranslating,
+                isCurving,
                 actionW,
                 actionS,
                 actionA,
@@ -112,7 +113,6 @@ void resetScaleVariables()
 
 void printCommands()
 {
-    // TODO: Adicionar qual o comando vai startar e pausar o movimento com curva
     cout << "Comandos para interagir com a cena:" << endl;
     cout << "==========================================================" << endl;
     cout << "Seleção de objetos:" << endl;
@@ -135,6 +135,7 @@ void printCommands()
     cout << "       ==> W e S - para transladar no eixo X" << endl;
     cout << "       ==> A e D - para transladar no eixo Y" << endl;
     cout << "       ==> I e J - para transladar no eixo Z" << endl;
+    cout << "   ==> X - para ativar o movimento em curva" << endl;
 }
 
 void handleLighting(GLuint shaderID)
@@ -225,12 +226,21 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         {
             isRotating = true;
             isTranslating = false;
+            isCurving = false;
         }
 
         if (key == GLFW_KEY_T && action == GLFW_PRESS)
         {
             isTranslating = true;
             isRotating = false;
+            isCurving = false;
+        }
+
+        if (key == GLFW_KEY_X && action == GLFW_PRESS)
+        {
+            isCurving = true;
+            isRotating = false;
+            isTranslating = false;
         }
 
         if (key == GLFW_KEY_W)
