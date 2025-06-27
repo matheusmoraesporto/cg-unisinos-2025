@@ -56,12 +56,6 @@ void Object3D::initialSetup()
     // Ativando o primeiro buffer de textura da OpenGL
     glActiveTexture(GL_TEXTURE0);
 
-    // Matriz de modelo: transformações na geometria (objeto)
-    model = glm::translate(model, glm::vec3(position.x, position.y, position.z));
-    // model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-    // model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-    // model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(scale, scale, scale));
     glUniformMatrix4fv(glGetUniformLocation(shader->ID, "model"), 1, GL_FALSE, value_ptr(model));
 }
 
@@ -135,8 +129,9 @@ void Object3D::transform(
             updateTrajectory();
         }
 
-        updateModelMatrix();
     }
+
+    updateModelMatrix();
 }
 
 void Object3D::draw()
