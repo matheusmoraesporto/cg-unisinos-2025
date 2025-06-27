@@ -21,6 +21,9 @@ void Object3D::initialize(
     glm::vec3 rotation,
     std::vector<glm::vec3> trajectoryPoints,
     float trajectorySpeed,
+    glm::vec3 backLightPos,
+    glm::vec3 keyLightPos,
+    glm::vec3 fillLightPos,
     Shader *shader)
 {
     this->name = name;
@@ -36,6 +39,9 @@ void Object3D::initialize(
     this->currentPointIndex = 0;
     this->trajectoryT = 0.0f;
     this->trajectorySpeed = trajectorySpeed;
+    this->keyLightPos = keyLightPos;
+    this->fillLightPos = fillLightPos;
+    this->backLightPos = backLightPos;
 }
 
 void Object3D::initialSetup()
@@ -57,6 +63,10 @@ void Object3D::initialSetup()
     glActiveTexture(GL_TEXTURE0);
 
     glUniformMatrix4fv(glGetUniformLocation(shader->ID, "model"), 1, GL_FALSE, value_ptr(model));
+
+    glUniform3fv(glGetUniformLocation(shader->ID, "lightPosKey"), 1, glm::value_ptr(keyLightPos));
+    glUniform3fv(glGetUniformLocation(shader->ID, "lightPosFill"), 1, glm::value_ptr(fillLightPos));
+    glUniform3fv(glGetUniformLocation(shader->ID, "lightPosBack"), 1, glm::value_ptr(backLightPos));
 }
 
 void Object3D::setupGeometry()
@@ -128,7 +138,6 @@ void Object3D::transform(
         {
             updateTrajectory();
         }
-
     }
 
     updateModelMatrix();
@@ -377,8 +386,6 @@ void Object3D::updateTrajectory()
     glm::vec3 p1 = trajectoryPoints[idx + 1];
     glm::vec3 p2 = trajectoryPoints[idx + 2];
     glm::vec3 p3 = trajectoryPoints[idx + 3];
-
-
 
     // Avança o parâmetro t pela velocidade
     trajectoryT += trajectorySpeed;

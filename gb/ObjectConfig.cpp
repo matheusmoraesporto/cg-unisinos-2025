@@ -84,6 +84,21 @@ void objsInit(
             obj["rotation"].value("y", 0.0f),
             obj["rotation"].value("z", 0.0f));
 
+        auto lightingBack = glm::vec3(
+            obj["lighting"]["back"].value("x", 0.0f),
+            obj["lighting"]["back"].value("y", 0.0f),
+            obj["lighting"]["back"].value("z", 0.0f));
+
+        auto lightingKey = glm::vec3(
+            obj["lighting"]["key"].value("x", 0.0f),
+            obj["lighting"]["key"].value("y", 0.0f),
+            obj["lighting"]["key"].value("z", 0.0f));
+
+        auto lightingFill = glm::vec3(
+            obj["lighting"]["fill"].value("x", 0.0f),
+            obj["lighting"]["fill"].value("y", 0.0f),
+            obj["lighting"]["fill"].value("z", 0.0f));
+
         o.initialize(
             obj.value("name", ""),
             rootDir + obj.value("objPath", ""),
@@ -94,6 +109,9 @@ void objsInit(
             rotation,
             getTrajectoryPoints(obj),
             obj.value("trajectorySpeed", 0.0f),
+            lightingBack,
+            lightingKey,
+            lightingFill,
             shader);
 
         objects->push_back(o);

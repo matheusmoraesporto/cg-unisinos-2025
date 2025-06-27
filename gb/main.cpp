@@ -28,7 +28,6 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 // Protótipos das funções
 void printCommands();
 GLFWwindow *initializeGL();
-void handleLighting(GLuint shaderID);
 void resetScaleVariables();
 
 bool incrementScale = false, decrementScale = false, isRotating = false, isTranslating = false, isCurving = false;
@@ -64,8 +63,6 @@ int main()
     {
         objects[i].initialSetup();
     }
-
-    handleLighting(shader.ID);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -141,17 +138,6 @@ void printCommands()
     cout << "       ==> A e D - para transladar no eixo Y" << endl;
     cout << "       ==> I e J - para transladar no eixo Z" << endl;
     cout << "   ==> X - para ativar o movimento em curva" << endl;
-}
-
-void handleLighting(GLuint shaderID)
-{
-    glm::vec3 backLightPos = glm::vec3(-1.0f, 1.0f, -1.0f);
-    glm::vec3 keyLightPos = glm::vec3(-1.0f, -1.0f, 1.0f);
-    glm::vec3 fillLightPos = glm::vec3(1.0f, -1.0f, 1.0f);
-
-    glUniform3fv(glGetUniformLocation(shaderID, "lightPosKey"), 1, glm::value_ptr(keyLightPos));
-    glUniform3fv(glGetUniformLocation(shaderID, "lightPosFill"), 1, glm::value_ptr(fillLightPos));
-    glUniform3fv(glGetUniformLocation(shaderID, "lightPosBack"), 1, glm::value_ptr(backLightPos));
 }
 
 GLFWwindow *initializeGL()

@@ -32,9 +32,7 @@ public:
 
 protected:
 	Shader *shader;
-	bool firstMouse, rotateX, rotateY, rotateZ;
-	float lastX, lastY, pitch, yaw;
-	float sensitivity, speed;
+	bool firstMouse, rotateX, rotateY, rotateZ, selected;
+	float lastX, lastY, pitch, yaw, sensitivity, speed;
 	glm::vec3 cameraFront, cameraPos, cameraUp;
-	bool selected;
 };

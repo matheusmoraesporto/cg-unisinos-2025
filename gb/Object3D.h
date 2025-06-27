@@ -20,6 +20,9 @@ private:
     std::vector<glm::vec3> trajectoryPoints;
     float trajectoryT;     // tempo de animação da trajetória
     float trajectorySpeed; // velocidade da animação da trajetória
+    glm::vec3 backLightPos;
+    glm::vec3 keyLightPos;
+    glm::vec3 fillLightPos;
 
     // Propriedades do objeto 3D lidas do arquivo OBJ/MTL
     std::vector<GLfloat> positions;
@@ -68,6 +71,9 @@ public:
         glm::vec3 rotation,
         std::vector<glm::vec3> trajectoryPoints,
         float trajectorySpeed,
+        glm::vec3 backLightPos,
+        glm::vec3 keyLightPos,
+        glm::vec3 fillLightPos,
         Shader *shader);
 
     void initialSetup();
